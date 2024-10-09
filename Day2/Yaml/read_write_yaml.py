@@ -1,4 +1,4 @@
-import yaml
+import yaml # Import the PyYAML module for reading and writing YAML files
 import re   # Import the re module for regular expressions to detect scientific notation numbers
 
 # Regular expression to detect scientific notation numbers in strings
@@ -15,6 +15,13 @@ def scientific_notation_constructor(loader, node):
     return value
 
 def print_yaml_with_types(data, indent=0):
+    """
+    Print the YAML data with types of the values.
+    Calls itself recursively to print nested dictionaries and lists.
+    :param data:
+    :param indent:
+    :return:
+    """
     if isinstance(data, dict):
         for key, value in data.items():
             # if the value is a dictionary or a list, print the key and its type
@@ -34,7 +41,8 @@ def print_yaml_with_types(data, indent=0):
         print(' ' * indent + f"({type(data).__name__}) {data}")
 
 if __name__ == '__main__':
-    # Register the custom constructor for strings in SafeLoader
+    # Register the custom constructor for strings in SafeLoader to
+    # convert scientific notation to float
     yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_SCALAR_TAG,
                                     scientific_notation_constructor    )
 
@@ -52,10 +60,6 @@ if __name__ == '__main__':
     data['measurement_points'].append({'frequency': 10e9, 'power': 0})
     data['settings']['averaging'] = 20
 
-    # Print the modified data with types
-    print("\nModified data with types:")
-    print_yaml_with_types(data)
-
     # Write the modified data back to a new YAML file
     with open('rf_setup_modified.yaml', 'w') as file:
         yaml.dump(data, file, default_flow_style=False)
@@ -64,5 +68,8 @@ if __name__ == '__main__':
 
     # Read and print the contents of the new file
     with open('rf_setup_modified.yaml', 'r') as file:
-        print("\nContents of 'rf_setup_modified.yaml':")
-        print(file.read())
+        data = yaml.safe_load(file)
+
+    # Print the modified data with types
+    print("\nModified data with types:")
+    print_yaml_with_types(data)
