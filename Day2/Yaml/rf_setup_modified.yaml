@@ -1,0 +1,27 @@
+equipment:
+  signal_generator:
+    frequency_range:
+    - 250e6
+    - 20e9
+    model: AgilentE8257D
+    output_power: 15
+  spectrum_analyzer:
+    frequency_range:
+    - 3e6
+    - 44e9
+    model: KeysightN9030B
+    reference_level: 0
+experiment_name: RF Power Measurement
+measurement_points:
+- frequency: 1e9
+  power: 5
+- frequency: 2e9
+  power: 7
+- frequency: 5e9
+  power: 3
+- frequency: 10000000000.0
+  power: 0
+settings:
+  averaging: 20
+  rbw: 1e6
+  vbw: 1e6
