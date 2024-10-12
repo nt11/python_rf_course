@@ -47,7 +47,6 @@ if __name__ == '__main__':
                                     scientific_notation_constructor    )
 
     # Read the YAML file
-    # yaml = yaml.YAML(typ='rt', pure=True)
     with open('rf_setup.yaml', 'r') as file:
         data = yaml.safe_load(file)
 
