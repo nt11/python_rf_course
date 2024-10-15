@@ -1,12 +1,10 @@
-from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow
-from PyQt6.QtGui import QPalette, QColor
+from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtGui import QPalette
 from PyQt6.uic import loadUi
 
 import pyvisa
-import numpy as np
 import re
 import yaml
-import os
 import sys
 
 def is_valid_ip(ip:str) -> bool:
@@ -23,7 +21,8 @@ def is_valid_number(s):
 class LabDemoMxgControl(QMainWindow):
     def __init__(self):
         super().__init__()
-        hui = loadUi("BasicMxgControl.ui", self)
+        # Load the UI file into the Class (LabDemoMxgControl) object
+        loadUi("BasicMxgControl.ui", self)
 
         self.setWindowTitle("MXG Control")
 
@@ -38,35 +37,32 @@ class LabDemoMxgControl(QMainWindow):
                           Save       = (self.actionSave      ,'triggered'        ,self.cb_save          ),
                           Load       = (self.actionLoad      ,'triggered'        ,self.cb_load          ))
 
-        palette = QPalette()
-        #palette.setColor(palette.ColorRole.WindowText , QColor("black"   ))
-        #palette.setColor(palette.ColorRole.Light      , QColor("green" ))
-        #palette.setColor(palette.ColorRole.Dark       , QColor("blue"  ))
-
         # Connect GUI objects to callback functions for events
+        # equivalent for example to:
+        #       self.pushButton.clicked.connect(self.cb_connect)
         for key, value_tuple in self.h_gui.items():
             h, event, cb = value_tuple
             if cb is not None:
                 getattr(h,event).connect( cb )
 
+        # Create a Resource Manager object
         self.rm = pyvisa.ResourceManager()
 
         with open("sig_gen_defaults.yaml", "r") as f:
-            Param = yaml.safe_load(f)
+            self.Param = yaml.safe_load(f)
 
-        self.h_gui['PoutSlider'][0].setMaximum(Param['MxgSliderPmax'])
-        self.h_gui['PoutSlider'][0].setMinimum(Param['MxgSliderPmin'])
+        self.h_gui['PoutSlider'][0].setMaximum(self.Param['MxgSliderPmax'])
+        self.h_gui['PoutSlider'][0].setMinimum(self.Param['MxgSliderPmin'])
 
         self.siggen = None
 
-        if is_valid_ip( Param["MxgIP"] ):
-            self.mxg_ip = Param["MxgIP"]
-            self.h_gui["IP"][0].setText(Param["MxgIP"])
+        if is_valid_ip( self.Param["MxgIP"] ):
+            self.mxg_ip = self.Param["MxgIP"]
+            self.h_gui["IP"][0].setText(self.Param["MxgIP"])
         else:
             self.mxg_ip = None
 
         self.is_connect_mxg = False
-        self.Params         = Param
 
 
     def cb_connect(self):
@@ -164,26 +160,6 @@ class LabDemoMxgControl(QMainWindow):
         self.h_gui['PoutSlider'][0].setMaximum(self.Params['MxgSliderPmax'])
         self.h_gui['PoutSlider'][0].setMinimum(self.Params['MxgSliderPmin'])
         self.h_gui['IP'][0].setText(self.Params['MxgIP'])
-
-    def cb_preset(self):
-        if self.is_connect_mxg:
-            self.siggen.write("*RST")
-            self.siggen.write(":OUTP:STAT OFF")
-            self.siggen.write(":OUTP:MOD:STAT OFF")
-            self.siggen.write(":POWER -10dBm")
-            self.siggen.write(":FREQ 1MHz")
-            self.h_gui["RfOnOff"][0].setChecked(False)
-            self.h_gui["ModOnOff"][0].setChecked(False)
-            self.h_gui["PoutSlider"][0].setValue(-10)
-            self.h_gui["Fc"][0].setText("1")
-            # Erase File to play
-            self.h_gui["FileName"][0].setText("")
-            self.h_gui["Path"][0].setText("")
-
-            self.h_gui["TonesOnOff"][0].setChecked(False)
-            self.cb_tones_on_off()
-        else:
-            print("MXG not connected")
 
 if __name__ == "__main__":
     app         = QApplication( sys.argv )
