@@ -206,9 +206,9 @@ class LabDemoMxgControl(QMainWindow):
     def cb_save(self):
         print("Save")
         # Read the values from the GUI objects and save them to the Params dictionary
-        self.Params["IP"]   = self.h_gui['IP'  ].get_val()
-        self.Params["Fc"]   = self.h_gui['Fc'  ].get_val()
-        self.Params["Pout"] = self.h_gui['Pout'].get_val()
+        for key, value in self.Params.items():
+            if key in self.h_gui:
+                self.Params[key] = self.h_gui[key].get_val()
 
         with open("sig_gen_defaults.yaml", "w") as f:
             yaml.dump(self.Params, f)
@@ -219,10 +219,11 @@ class LabDemoMxgControl(QMainWindow):
             self.Params = yaml.safe_load(f)
 
         # Set the default values to the GUI objects
-        self.h_gui['IP'  ].set_val(     self.Params["IP"]  ) # consider to verify if IP is changed then disconnect and disconnect
-        self.h_gui['Fc'  ].set_val(     self.Params["Fc"]  , is_callback=True)
-        self.h_gui['Pout'].set_val(     self.Params["Pout"], is_callback=True)
+        for key, value in self.Params.items():
+            if key in self.h_gui:
+                self.h_gui[key].set_val(value, is_callback=True)
 
+        # Additional configuration parameters
         self.h_gui['Pout'].obj.setMaximum( self.Params["PoutMax"] )
         self.h_gui['Pout'].obj.setMinimum( self.Params["PoutMin"] )
 
