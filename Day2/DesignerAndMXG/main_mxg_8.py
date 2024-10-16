@@ -81,14 +81,13 @@ class LabDemoMxgControl(QMainWindow):
                 # Update the GUI
                 # in pushButton the callback is not triggered when calling setChecked
                 self.pushButton_2   .setChecked( rf_state)
-                self.pushButton_2.clicked.emit() # Emit the signal manually
                 self.pushButton_3   .setChecked(mod_state)
-                self.pushButton_3.clicked.emit() # Emit the signal manually
-                # in Slider the callback is triggered when calling setValue
+                # in Slider the callback is triggered when calling setValue (so BlockSignals is used)
+                self.horizontalSlider.blockSignals(True)
                 self.horizontalSlider.setValue(int(output_power_dbm))
+                self.horizontalSlider.blockSignals(False)
                 # in lineEdit the callback is not triggered when calling setText
                 self.lineEdit_2     .setText(f"{fc}")
-                self.lineEdit_2.editingFinished.emit() # Emit the signal manually
             except Exception:
                 if self.sig_gen is not None:
                     self.sig_gen.close()
@@ -183,13 +182,14 @@ class LabDemoMxgControl(QMainWindow):
             self.Params = yaml.safe_load(f)
 
         # Set the default values to the GUI objects
-        self.lineEdit  .setText(     self.Params["IP"]  )
+        self.lineEdit  .setText(     self.Params["IP"]  ) # consider to verify if IP is changed then disconnect and disconnect
         self.lineEdit_2.setText( str(self.Params["Fc"]) )
-        self.horizontalSlider.setValue( self.Params["Pout"] )
-        self.horizontalSlider.setMaximum( self.Params["PoutMax"] )
-        self.horizontalSlider.setMinimum( self.Params["PoutMin"] )
         if self.sig_gen is not None:
             self.lineEdit_2.editingFinished.emit()  # Emit the signal manually
+        self.horizontalSlider.setValue( self.Params["Pout"] ) # callback is triggered
+
+        self.horizontalSlider.setMaximum( self.Params["PoutMax"] )
+        self.horizontalSlider.setMinimum( self.Params["PoutMin"] )
 
 if __name__ == "__main__":
     # Initializes the application and prepares it to run a Qt event loop
