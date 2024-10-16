@@ -42,7 +42,12 @@ class LabDemoMxgControl(QMainWindow):
 
         # Load the configuration/default values from the YAML file
         self.Params = None
-        self.h_gui['Load'].emit() # self.cb_load()
+        self.file_name = "sig_gen_defaults.yaml"
+        self.h_gui['Load'].emit() #  self.cb_load
+        self.file_name = "last.yaml"
+        self.h_gui['Save'].emit() #  self.cb_save
+
+        # self.h_gui['Load'].emit() #  self.cb_load
 
 
     # Callback function for the Connect button
@@ -152,12 +157,12 @@ class LabDemoMxgControl(QMainWindow):
             if key in self.h_gui:
                 self.Params[key] = self.h_gui[key].get_val()
 
-        with open("sig_gen_defaults.yaml", "w") as f:
+        with open(self.file_name, "w") as f:
             yaml.dump(self.Params, f)
 
     def cb_load(self):
         print("Load")
-        with open("sig_gen_defaults.yaml", "r") as f:
+        with open(self.file_name, "r") as f:
             self.Params = yaml.safe_load(f)
 
         # Set the default values to the GUI objects

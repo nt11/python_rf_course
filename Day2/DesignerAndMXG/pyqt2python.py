@@ -4,11 +4,11 @@ class h_gui:
     def __init__(self, obj, event, callback):
         self.obj        = obj
         self.event      = event
-        self.cb         = callback
+        self.callback   = callback
         self.val_type   = None
 
-        if self.cb is not None:
-            getattr(self.obj, self.event).connect(self.cb)
+        if self.callback is not None:
+            getattr(self.obj, self.event).connect(self.callback)
 
     def set_val(self, value, is_callback = False):
         # if the value type is not set, set it to the type of the value
