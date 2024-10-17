@@ -47,9 +47,6 @@ class LabDemoMxgControl(QMainWindow):
         self.file_name = "last.yaml"
         self.h_gui['Save'].emit() #  self.cb_save
 
-        # self.h_gui['Load'].emit() #  self.cb_load
-
-
     # Callback function for the Connect button
     # That is a checkable button
     def cb_connect(self):
@@ -171,8 +168,17 @@ class LabDemoMxgControl(QMainWindow):
                 self.h_gui[key].set_val(value, is_callback=True)
 
         # Additional configuration parameters
-        self.h_gui['Pout'].obj.setMaximum( self.Params["PoutMax"] )
-        self.h_gui['Pout'].obj.setMinimum( self.Params["PoutMin"] )
+        self.h_gui['Pout'].call_widget_method('setMaximum',False,self.Params["PoutMax"])
+        self.h_gui['Pout'].call_widget_method('setMinimum',False,self.Params["PoutMin"])
+
+    def closeEvent(self, event):
+        print("Exiting the application")
+        # Clean up the resources
+        # Close the connection to the signal generator
+        if self.sig_gen is not None:
+            self.sig_gen.close()
+        # Close the Resource Manager
+        self.rm.close()
 
 if __name__ == "__main__":
     # Initializes the application and prepares it to run a Qt event loop

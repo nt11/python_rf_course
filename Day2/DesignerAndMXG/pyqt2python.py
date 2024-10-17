@@ -42,6 +42,22 @@ class h_gui:
         # restore the blockSignal state
         self.obj.blockSignals(block_state)
 
+    def call_widget_method(self, method,is_callback = False, *args):
+        # read the blockSignal state
+        block_state = self.obj.signalsBlocked()
+
+        # block the signal for all widgets
+        self.obj.blockSignals(True)
+        # call
+        r = getattr(self.obj, method)(*args)
+        if is_callback:
+            getattr(self.obj,self.event).emit()
+
+        # restore the blockSignal state
+        self.obj.blockSignals(block_state)
+
+        return r
+
     def get_val(self):
         if isinstance(self.obj, QComboBox):
             return self.obj.currentIndex()
