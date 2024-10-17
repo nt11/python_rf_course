@@ -47,6 +47,10 @@ class LabDemoMxgControl(QMainWindow):
         self.file_name = "last.yaml"
         self.h_gui['Save'].emit() #  self.cb_save
 
+    def sig_gen_write(self, cmd:str):
+        if self.sig_gen is not None:
+            self.sig_gen.write(cmd)
+
     # Callback function for the Connect button
     # That is a checkable button
     def cb_connect(self):
@@ -93,24 +97,20 @@ class LabDemoMxgControl(QMainWindow):
     # That is a checkable button
     def cb_rf_on_off(self):
         if self.sender().isChecked():
-            if self.sig_gen is not None:
-                self.sig_gen.write(":OUTPUT:STATE ON")
+            self.sig_gen_write(":OUTPUT:STATE ON")
             print("RF On")
         else:
-            if self.sig_gen is not None:
-                self.sig_gen.write(":OUTPUT:STATE OFF")
+            self.sig_gen_write(":OUTPUT:STATE OFF")
             print("RF Off")
 
     # Callback function for the Modulation On/Off button
     # That is a checkable button
     def cb_mod_on_off(self):
         if self.sender().isChecked():
-            if self.sig_gen is not None:
-                self.sig_gen.write(":OUTPUT:MOD:STATE ON")
+            self.sig_gen_write(":OUTPUT:MOD:STATE ON")
             print("Modulation On")
         else:
-            if self.sig_gen is not None:
-                self.sig_gen.write(":OUTPUT:MOD:STATE OFF")
+            self.sig_gen_write(":OUTPUT:MOD:STATE OFF")
             print("Modulation Off")
 
     # Callback function for the IP lineEdit
@@ -136,14 +136,12 @@ class LabDemoMxgControl(QMainWindow):
             # Set the default value to the GUI object
             self.h_gui['Fc'].set_val(frequency_mhz)
 
-        if self.sig_gen is not None:
-            self.sig_gen.write(f":FREQuency {frequency_mhz} MHz") # can replace the '} MHz' with '}e6'
+        self.sig_gen_write(f":FREQuency {frequency_mhz} MHz") # can replace the '} MHz' with '}e6'
         print(f"Fc = {frequency_mhz} MHz")
 
     def cb_pout_slider( self ):
         val = self.h_gui['Pout'].get_val()
-        if self.sig_gen is not None:
-            self.sig_gen.write(f":POWER {val}dBm")
+        self.sig_gen_write(f":POWER {val}dBm")
 
         print(f"Pout = {val} dBm")
 

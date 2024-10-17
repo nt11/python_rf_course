@@ -53,6 +53,7 @@ class LabDemoMxgControl(QMainWindow):
         self.Params = None
         self.cb_load()
 
+
     # Callback function for the Connect button
     # That is a checkable button
     def cb_connect(self):
@@ -80,14 +81,13 @@ class LabDemoMxgControl(QMainWindow):
                 # Update the GUI
                 # in pushButton the callback is not triggered when calling setChecked
                 self.pushButton_2   .setChecked( rf_state)
-                self.pushButton_2.clicked.emit() # Emit the signal manually
                 self.pushButton_3   .setChecked(mod_state)
-                self.pushButton_3.clicked.emit() # Emit the signal manually
-                # in Slider the callback is triggered when calling setValue
+                # in Slider the callback is triggered when calling setValue (so BlockSignals is used)
+                self.horizontalSlider.blockSignals(True)
                 self.horizontalSlider.setValue(int(output_power_dbm))
+                self.horizontalSlider.blockSignals(False)
                 # in lineEdit the callback is not triggered when calling setText
                 self.lineEdit_2     .setText(f"{fc}")
-                self.lineEdit_2.editingFinished.emit() # Emit the signal manually
             except Exception:
                 if self.sig_gen is not None:
                     self.sig_gen.close()
