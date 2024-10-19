@@ -1,13 +1,33 @@
-from PyQt6.QtWidgets import QComboBox, QCheckBox, QSlider, QPushButton
+from PyQt6.QtWidgets import QComboBox, QCheckBox, QSlider, QPushButton, QSpinBox, QLineEdit, QDoubleSpinBox
+from PyQt6.QtGui import QAction
 
 class h_gui:
-    def __init__(self, obj, event, callback):
+    def __init__(self, obj, callback, event = None):
         self.obj        = obj
-        self.event      = event
         self.callback   = callback
         self.val_type   = None
 
         if self.callback is not None:
+            if event is None:
+                if isinstance(obj, QComboBox):
+                    self.event = "currentIndexChanged"
+                elif isinstance(obj, QCheckBox):
+                    self.event = "stateChanged"
+                elif isinstance(obj, (QSlider, QSpinBox, QDoubleSpinBox)):
+                    self.event = "valueChanged"
+                elif isinstance(obj, QPushButton):
+                    self.event = "clicked"
+                elif isinstance(obj, QAction):
+                    self.event = "triggered"
+                elif isinstance(obj, QLineEdit):
+                    self.event = "editingFinished"
+                else:
+                    # Report an error
+                    self.event = None
+                    raise ValueError(f"Error: Unknown widget type {obj}")
+            else:
+                self.event = event
+
             getattr(self.obj, self.event).connect(self.callback)
 
     def set_val(self, value, is_callback = False):

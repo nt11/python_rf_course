@@ -27,14 +27,14 @@ class LabDemoMxgControl(QMainWindow):
 
         # Interface of the GUI Widgets to the Python code
         self.h_gui = dict(
-            Connect     = h_gui(self.pushButton         , 'clicked'         , self.cb_connect       ),
-            RF_On_Off   = h_gui(self.pushButton_2       , 'clicked'         , self.cb_rf_on_off     ),
-            Mod_On_Off  = h_gui(self.pushButton_3       , 'clicked'         , self.cb_mod_on_off    ),
-            IP          = h_gui(self.lineEdit           , 'editingFinished' , self.cb_ip            ),
-            Fc          = h_gui(self.lineEdit_2         , 'editingFinished' , self.cb_fc            ),
-            Pout        = h_gui(self.horizontalSlider   , 'valueChanged'    , self.cb_pout_slider   ),
-            Save        = h_gui(self.actionSave         , 'triggered'       , self.cb_save          ),
-            Load        = h_gui(self.actionLoad         , 'triggered'       , self.cb_load          ))
+            Connect     = h_gui(self.pushButton         , self.cb_connect       ),
+            RF_On_Off   = h_gui(self.pushButton_2       , self.cb_rf_on_off     ),
+            Mod_On_Off  = h_gui(self.pushButton_3       , self.cb_mod_on_off    ),
+            IP          = h_gui(self.lineEdit           , self.cb_ip            ),
+            Fc          = h_gui(self.lineEdit_2         , self.cb_fc            ),
+            Pout        = h_gui(self.horizontalSlider   , self.cb_pout_slider   ),
+            Save        = h_gui(self.actionSave         , self.cb_save          ),
+            Load        = h_gui(self.actionLoad         , self.cb_load          ))
 
         # Create a Resource Manager object
         self.rm         = pyvisa.ResourceManager()
