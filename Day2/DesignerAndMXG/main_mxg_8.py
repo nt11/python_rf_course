@@ -1,3 +1,4 @@
+
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.uic import loadUi
 
@@ -6,7 +7,6 @@ import sys
 import re
 
 import pyvisa
-from pyqt2python import h_gui
 
 def is_valid_ip(ip:str) -> bool:
     # Regular expression pattern for matching IP address
@@ -26,15 +26,24 @@ class LabDemoMxgControl(QMainWindow):
         self.setWindowTitle("MXG Control")
 
         # Interface of the GUI Widgets to the Python code
-        self.h_gui = dict(
-            Connect     = h_gui(self.pushButton         , self.cb_connect       ),
-            RF_On_Off   = h_gui(self.pushButton_2       , self.cb_rf_on_off     ),
-            Mod_On_Off  = h_gui(self.pushButton_3       , self.cb_mod_on_off    ),
-            IP          = h_gui(self.lineEdit           , self.cb_ip            ),
-            Fc          = h_gui(self.lineEdit_2         , self.cb_fc            ),
-            Pout        = h_gui(self.horizontalSlider   , self.cb_pout_slider   ),
-            Save        = h_gui(self.actionSave         , self.cb_save          ),
-            Load        = h_gui(self.actionLoad         , self.cb_load          ))
+
+        # Object.Event.connect(callback)
+        # or alternatively:
+        # getattr(self.Object, 'Event').connect(callback)
+        # Connect GUI objects to callback functions for events
+        # Object = self.pushButton, Event = 'clicked', callback = self.cb_connect
+        self.pushButton  .clicked.connect(self.cb_connect   )
+        self.pushButton_2.clicked.connect(self.cb_rf_on_off )
+        self.pushButton_3.clicked.connect(self.cb_mod_on_off)
+        # lineEdit
+        self.lineEdit  .editingFinished.connect(self.cb_ip)
+        self.lineEdit_2.editingFinished.connect(self.cb_fc)
+        # horizontalSlider
+        self.horizontalSlider.valueChanged.connect(self.cb_pout_slider)
+        # actionSave
+        self.actionSave.triggered.connect(self.cb_save)
+        # actionLoad
+        self.actionLoad.triggered.connect(self.cb_load)
 
         # Create a Resource Manager object
         self.rm         = pyvisa.ResourceManager()
@@ -42,23 +51,17 @@ class LabDemoMxgControl(QMainWindow):
 
         # Load the configuration/default values from the YAML file
         self.Params = None
-        self.file_name = "sig_gen_defaults.yaml"
-        self.h_gui['Load'].emit() #  self.cb_load
-        self.file_name = "last.yaml"
-        self.h_gui['Save'].emit() #  self.cb_save
+        self.cb_load()
 
-    def sig_gen_write(self, cmd:str):
-        if self.sig_gen is not None:
-            self.sig_gen.write(cmd)
 
     # Callback function for the Connect button
     # That is a checkable button
     def cb_connect(self):
-        if self.sender().isChecked(): # self.h_gui['Connect'].obj.isChecked():
+        if self.sender().isChecked():
             print("Connect button Checked")
             # Open the connection to the signal generator
+            ip           = self.lineEdit.text()
             try:
-                ip           = self.h_gui['IP'].get_val()
                 self.sig_gen = self.rm.open_resource(f"TCPIP0::{ip}::inst0::INSTR")
                 print(f"Connected to {ip}")
                 # Read the signal generator status and update the GUI (RF On/Off, Modulation On/Off,Pout and Fc)
@@ -75,11 +78,16 @@ class LabDemoMxgControl(QMainWindow):
                 self.sig_gen.write(":FREQ?")
                 fc          = float(self.sig_gen.read()) * 1e-6
 
-                # Update the GUI (no callbacks)
-                self.h_gui['RF_On_Off'  ].set_val( rf_state)
-                self.h_gui['Mod_On_Off' ].set_val(mod_state)
-                self.h_gui['Pout'       ].set_val(output_power_dbm)
-                self.h_gui['Fc'         ].set_val(fc)
+                # Update the GUI
+                # in pushButton the callback is not triggered when calling setChecked
+                self.pushButton_2   .setChecked( rf_state)
+                self.pushButton_3   .setChecked(mod_state)
+                # in Slider the callback is triggered when calling setValue (so BlockSignals is used)
+                self.horizontalSlider.blockSignals(True)
+                self.horizontalSlider.setValue(int(output_power_dbm))
+                self.horizontalSlider.blockSignals(False)
+                # in lineEdit the callback is not triggered when calling setText
+                self.lineEdit_2     .setText(f"{fc}")
             except Exception:
                 if self.sig_gen is not None:
                     self.sig_gen.close()
@@ -97,86 +105,91 @@ class LabDemoMxgControl(QMainWindow):
     # That is a checkable button
     def cb_rf_on_off(self):
         if self.sender().isChecked():
-            self.sig_gen_write(":OUTPUT:STATE ON")
+            if self.sig_gen is not None:
+                self.sig_gen.write(":OUTPUT:STATE ON")
             print("RF On")
         else:
-            self.sig_gen_write(":OUTPUT:STATE OFF")
+            if self.sig_gen is not None:
+                self.sig_gen.write(":OUTPUT:STATE OFF")
             print("RF Off")
 
     # Callback function for the Modulation On/Off button
     # That is a checkable button
     def cb_mod_on_off(self):
         if self.sender().isChecked():
-            self.sig_gen_write(":OUTPUT:MOD:STATE ON")
+            if self.sig_gen is not None:
+                self.sig_gen.write(":OUTPUT:MOD:STATE ON")
             print("Modulation On")
         else:
-            self.sig_gen_write(":OUTPUT:MOD:STATE OFF")
+            if self.sig_gen is not None:
+                self.sig_gen.write(":OUTPUT:MOD:STATE OFF")
             print("Modulation Off")
 
     # Callback function for the IP lineEdit
     def cb_ip(self):
-        ip          = self.h_gui['IP'].get_val()
+        # Using the sender() method of PyQt6 to get the object that triggered the event
+        obj_caller  = self.sender()
+        ip          = obj_caller.text()
         # Check if the ip is a valid
         if not is_valid_ip(ip):
             print(f"Invalid IP address: {ip}, Resetting to default")
             ip = self.Params["IP"]
             # Set the default value to the GUI object
-            self.h_gui['IP'].set_val(ip)
+            obj_caller.setText(ip)
 
         print(f"IP = {ip}")
 
     # Callback function for the Fc lineEdit
     def cb_fc(self):
+        # Using the sender() method of PyQt6 to get the object that triggered the event
+        obj_caller = self.sender()
+        frequency_mhz = obj_caller.text()
         # Check if the frequency is a valid float number
         try:
-            frequency_mhz = self.h_gui['Fc'].get_val()
+            frequency_mhz = float(frequency_mhz)
         except ValueError:
-            print(f"Invalid Frequency: Resetting to default")
+            print(f"Invalid Frequency: {frequency_mhz}, Resetting to default")
             frequency_mhz = self.Params["Fc"]
             # Set the default value to the GUI object
-            self.h_gui['Fc'].set_val(frequency_mhz)
+            obj_caller.setText(str(frequency_mhz))
 
-        self.sig_gen_write(f":FREQuency {frequency_mhz} MHz") # can replace the '} MHz' with '}e6'
+        if self.sig_gen is not None:
+            self.sig_gen.write(f":FREQuency {frequency_mhz} MHz") # can replace the '} MHz' with '}e6'
         print(f"Fc = {frequency_mhz} MHz")
 
     def cb_pout_slider( self ):
-        val = self.h_gui['Pout'].get_val()
-        self.sig_gen_write(f":POWER {val}dBm")
+        # Using the sender() method of PyQt6 to get the object that triggered the event
+        obj_caller  = self.sender()
+        value       = obj_caller.value()
+        if self.sig_gen is not None:
+            self.sig_gen.write(f":POWER {value}dBm")
 
-        print(f"Pout = {val} dBm")
+        print(f"Pout = {value} dBm")
 
     def cb_save(self):
         print("Save")
         # Read the values from the GUI objects and save them to the Params dictionary
-        for key, value in self.Params.items():
-            if key in self.h_gui:
-                self.Params[key] = self.h_gui[key].get_val()
+        self.Params["IP"]   = self.lineEdit.text()
+        self.Params["Fc"]   = float(self.lineEdit_2.text())
+        self.Params["Pout"] = self.horizontalSlider.value()
 
-        with open(self.file_name, "w") as f:
+        with open("sig_gen_defaults.yaml", "w") as f:
             yaml.dump(self.Params, f)
 
     def cb_load(self):
         print("Load")
-        with open(self.file_name, "r") as f:
+        with open("sig_gen_defaults.yaml", "r") as f:
             self.Params = yaml.safe_load(f)
 
         # Set the default values to the GUI objects
-        for key, value in self.Params.items():
-            if key in self.h_gui:
-                self.h_gui[key].set_val(value, is_callback=True)
-
-        # Additional configuration parameters
-        self.h_gui['Pout'].call_widget_method('setMaximum',False,self.Params["PoutMax"])
-        self.h_gui['Pout'].call_widget_method('setMinimum',False,self.Params["PoutMin"])
-
-    def closeEvent(self, event):
-        print("Exiting the application")
-        # Clean up the resources
-        # Close the connection to the signal generator
+        self.lineEdit  .setText(     self.Params["IP"]  ) # consider to verify if IP is changed then disconnect and disconnect
+        self.lineEdit_2.setText( str(self.Params["Fc"]) )
         if self.sig_gen is not None:
-            self.sig_gen.close()
-        # Close the Resource Manager
-        self.rm.close()
+            self.lineEdit_2.editingFinished.emit()  # Emit the signal manually
+        self.horizontalSlider.setValue( self.Params["Pout"] ) # callback is triggered
+
+        self.horizontalSlider.setMaximum( self.Params["PoutMax"] )
+        self.horizontalSlider.setMinimum( self.Params["PoutMin"] )
 
 if __name__ == "__main__":
     # Initializes the application and prepares it to run a Qt event loop
