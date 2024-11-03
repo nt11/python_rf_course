@@ -8,6 +8,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def mutitone(BW: float, Ntones: int, Fs: float, Nfft: int = 4096)->Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    '''
+    Design a multi-tone signal in the frequency domain and return the time domain signal.
+    Flat amplitude symmetrical around DC.
+    :param BW:
+    :param Ntones:
+    :param Fs:
+    :param Nfft:
+    :return: x - Periodic time domain multi-tone signal, X - frequency domain, F - Frequency vector
+    '''
     # Generate the frequency vector (symmetric around DC)
     f = np.linspace(-BW / 2, BW / 2, Ntones)
     # Generate the amplitude vector

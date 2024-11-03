@@ -41,8 +41,8 @@ class LabDemoMxgControl(QMainWindow):
         self.sig_gen    = None
 
         # Load the configuration/default values from the YAML file
-        self.Params = None
-        self.file_name = "sig_gen_defaults.yaml"
+        self.Params     = None
+        self.file_name  = "sig_gen_defaults.yaml"
         self.h_gui['Load'].emit() #  self.cb_load
         self.file_name = "last.yaml"
         self.h_gui['Save'].emit() #  self.cb_save
