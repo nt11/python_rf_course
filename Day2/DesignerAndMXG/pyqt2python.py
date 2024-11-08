@@ -1,5 +1,6 @@
-from PyQt6.QtWidgets import QComboBox, QCheckBox, QSlider, QPushButton, QSpinBox, QLineEdit, QDoubleSpinBox
 from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import QComboBox, QCheckBox, QSlider, QPushButton, QSpinBox, QLineEdit, QDoubleSpinBox
+
 
 class h_gui:
     def __init__(self, obj, callback, event = None):

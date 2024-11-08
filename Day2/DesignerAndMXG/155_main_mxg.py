@@ -1,8 +1,9 @@
+import sys
+
+import yaml
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.uic import loadUi
 
-import yaml
-import sys
 
 # Load the UI file into the Class (LabDemoMxgControl) object
 # The UI file (BasicMxgControl.ui) is created using Qt Designer

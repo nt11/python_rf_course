@@ -8,15 +8,12 @@
 
 
 from typing import Tuple
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
-from scipy.signal import upfirdn
 import matpie as mp
+import matplotlib.pyplot as plt
 import numpy as np
+from scipy.signal import upfirdn
 
-
-def rcosdesign(beta, span, sps, shape='sqrt'):
+def rcosdesign(beta:float, span:float, sps:int, shape:str='sqrt') -> np.ndarray:
     """
     Design a raised cosine FIR filter, similar to MATLAB's rcosdesign.
 
@@ -68,35 +65,44 @@ def rcosdesign(beta, span, sps, shape='sqrt'):
     # Normalize to unit energy
     return h / np.sqrt(np.sum(h ** 2))
 
-
 def xrandn_bw(Fs: float, BW: float, N: int)->Tuple[np.ndarray, np.ndarray]:
-    I   = np.floor(Fs/BW) # Interpolation factor used as the sps of the raised cosine filter
+    '''
+    Generate a cyclic narrow band (controlled) signal
+    '''
+    I   = int(np.floor(Fs/BW)) # Interpolation factor used as the sps of the raised cosine filter
     # Generate the QPSK symbols
-    sym = np.exp(1j*2*np.pi*np.random.randint(0,4,N)/4)
+    sym_in = np.exp(1j * 2 * np.pi * np.random.randint(0, 4, N) / 4)
     # Interpolate the symbols by I by using the raised cosine filter
     # Design the raised cosine filter
     # Generate the raised cosine filter
-    rc_filter = rcosdesign(beta=0.125, span=20, sps=I, shape='normal')
+    rc_filter = rcosdesign(beta:=0.125, span:=30, sps:=int(I), shape='normal')
 
     # Interpolate (QPSK) symbols using the raised cosine filter
-    y  = upfirdn(rc_filter, sym , I, 1)
-
+    sym_cyc = np.concatenate((sym_in[-span*3-1:-1], sym_in, sym_in[0:span*3]))
+    y  = upfirdn(rc_filter, sym_cyc, I, 1)
+    ii = (len(y) - len(sym_in)*I)//2 + 8*I
+    y  = y[ii: ii + len(sym_in)*I]
     # Resample the signal to the desired sampling frequency
     if Fs/BW != I:
         y = mp.resample(y, Fs/BW, I)
 
-    return y, sym
+    return y
 
 
 # Test the function
 if __name__ == '__main__':
     # MATLAB Like behavior.
+    #mp.matlab_like()
+    import matplotlib
     matplotlib.use('TkAgg')
     plt.ion()
+
     Fs      = 20 # Hz
-    BW      = 2.5  # Hz
+    BW      = 3.33  # Hz
     N       = 5000
-    y, sym  = xrandn_bw(Fs, BW, N)
-    mp.psa(y, Fs, 0.1, PLOT = True)
+    y       = xrandn_bw(Fs, BW, N)
+    mp.psa(np.tile(y,10), Fs, 0.1, PLOT = True)
+
+
 
 

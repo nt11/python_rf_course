@@ -4,8 +4,10 @@
 # Thus, creating a multi-tone periodic signal in the time domain.
 
 from typing import Tuple
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 def mutitone(BW: float, Ntones: int, Fs: float, Nfft: int = 4096)->Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''

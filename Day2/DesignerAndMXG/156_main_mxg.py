@@ -1,10 +1,11 @@
 
+import re
+import sys
+
+import yaml
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.uic import loadUi
 
-import yaml
-import sys
-import re
 
 def is_valid_ip(ip:str) -> bool:
     # Regular expression pattern for matching IP address

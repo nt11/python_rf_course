@@ -1,5 +1,6 @@
-import yaml # Import the PyYAML module for reading and writing YAML files
-import re   # Import the re module for regular expressions to detect scientific notation numbers
+import re  # Import the re module for regular expressions to detect scientific notation numbers
+
+import yaml  # Import the PyYAML module for reading and writing YAML files
 
 # Regular expression to detect scientific notation numbers in strings
 scientific_notation_re = re.compile(r"^-?\d+(\.\d+)?[eE]-?\d+$")

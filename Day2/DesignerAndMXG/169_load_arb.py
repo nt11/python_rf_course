@@ -1,14 +1,11 @@
 # Loading the VSG ARB module with a custom waveform
 # using pyarbtools. Define a loading function
 
+import matplotlib
 # Import the necessary libraries
 import pyarbtools as arb
-import numpy as np
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-import time
 
+matplotlib.use('TkAgg')
 
 # Test the function
 if __name__ == '__main__':

@@ -1,12 +1,12 @@
 
+import re
+import sys
+
+import pyvisa
+import yaml
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.uic import loadUi
 
-import yaml
-import sys
-import re
-
-import pyvisa
 
 def is_valid_ip(ip:str) -> bool:
     # Regular expression pattern for matching IP address
@@ -46,7 +46,7 @@ class LabDemoMxgControl(QMainWindow):
         self.actionLoad.triggered.connect(self.cb_load)
 
         # Create a Resource Manager object
-        self.rm         = pyvisa.ResourceManager()
+        self.rm         = pyvisa.ResourceManager('@py')
         self.sig_gen    = None
 
         # Load the configuration/default values from the YAML file
