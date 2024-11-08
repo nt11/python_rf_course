@@ -4,3 +4,5 @@ Pout:     -80   # dBm int
 PoutMax:  0     # dBm int
 PoutMin: -100   # dBm int
 ArbNaxFs:  30.0 # MHz float
+MultiToneBw:  1.0 # MHz float
+MultiToneNtones:  2 # int

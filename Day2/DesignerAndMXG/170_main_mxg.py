@@ -52,7 +52,13 @@ class LabDemoMxgControl(QMainWindow):
         self.Params     = None
         self.file_name  = "sig_gen_defaults.yaml"
         self.h_gui['Load'].emit() #  self.cb_load
+
         self.file_name = "last.yaml"
+        try:
+            self.h_gui['Load'].callback()  # self.cb_load
+        except FileNotFoundError:
+            print("No last.yaml file found")
+
         self.h_gui['Save'].emit() #  self.cb_save
 
     def sig_gen_write(self, cmd:str):
@@ -165,8 +171,13 @@ class LabDemoMxgControl(QMainWindow):
 
     def cb_load(self):
         print("Load")
-        with open(self.file_name, "r") as f:
-            self.Params = yaml.safe_load(f)
+        try:
+            with open(self.file_name, "r") as f:
+                self.Params = yaml.safe_load(f)
+        except FileNotFoundError:
+            print(f"File not found: {self.file_name}")
+            raise
+
 
         # Set the default values to the GUI objects
         for key, value in self.Params.items():
