@@ -1,13 +1,15 @@
 import re
 import sys
+from signal import signal
 
 import pyvisa
+import pyarbtools as arb
 import yaml
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.uic import loadUi
 
 from pyqt2python import h_gui
-
+import o168_mutitone as mt
 
 def is_valid_ip(ip:str) -> bool:
     # Regular expression pattern for matching IP address
@@ -22,24 +24,29 @@ class LabDemoMxgControl(QMainWindow):
     def __init__(self):
         super().__init__()
         # Load the UI file into the Class (LabDemoMxgControl) object
-        loadUi("BasicMxgControl.ui", self)
+        loadUi("MxgControlMultiTone.ui", self)
 
         self.setWindowTitle("MXG Control")
 
         # Interface of the GUI Widgets to the Python code
         self.h_gui = dict(
-            Connect     = h_gui(self.pushButton         , self.cb_connect       ),
-            RF_On_Off   = h_gui(self.pushButton_2       , self.cb_rf_on_off     ),
-            Mod_On_Off  = h_gui(self.pushButton_3       , self.cb_mod_on_off    ),
-            IP          = h_gui(self.lineEdit           , self.cb_ip            ),
-            Fc          = h_gui(self.lineEdit_2         , self.cb_fc            ),
-            Pout        = h_gui(self.horizontalSlider   , self.cb_pout_slider   ),
-            Save        = h_gui(self.actionSave         , self.cb_save          ),
-            Load        = h_gui(self.actionLoad         , self.cb_load          ))
+            Connect             = h_gui(self.pushButton         , self.cb_connect           ),
+            RF_On_Off           = h_gui(self.pushButton_2       , self.cb_rf_on_off         ),
+            Mod_On_Off          = h_gui(self.pushButton_3       , self.cb_mod_on_off        ),
+            IP                  = h_gui(self.lineEdit           , self.cb_ip                ),
+            Fc                  = h_gui(self.lineEdit_2         , self.cb_fc                ),
+            Pout                = h_gui(self.horizontalSlider   , self.cb_pout_slider       ),
+            Save                = h_gui(self.actionSave         , self.cb_save              ),
+            Load                = h_gui(self.actionLoad         , self.cb_load              ),
+            MultiTone_On_Off    = h_gui(self.pushButton_4       , self.cb_multitone_on_off  ),
+            MultiToneBw         = h_gui(self.doubleSpinBox      , self.cb_multitone_update  ),
+            MultiToneNtones     = h_gui(self.dial               , self.cb_multitone_update  ))
 
         # Create a Resource Manager object
         self.rm         = pyvisa.ResourceManager('@py')
         self.sig_gen    = None
+        self.arb_gen    = None
+
 
         # Load the configuration/default values from the YAML file
         self.Params     = None
@@ -169,6 +176,46 @@ class LabDemoMxgControl(QMainWindow):
         # Additional configuration parameters
         self.h_gui['Pout'].call_widget_method('setMaximum',False,self.Params["PoutMax"])
         self.h_gui['Pout'].call_widget_method('setMinimum',False,self.Params["PoutMin"])
+
+    # Callback function for the MultiTone On/Off button
+    def cb_multitone_on_off(self):
+        if self.sender().isChecked():
+            print("MultiTone On")
+            try:
+                # Create ARB object
+                mxg_ip         = self.h_gui['IP'].get_val()
+                self.arb_gen    = arb.instruments.VSG(mxg_ip, timeout=3)
+                self.arb_gen.configure(fs=self.Params['ArbNaxFs']*1e6, iqScale=70 )
+                # Clear Errors
+                self.sig_gen_write('*CLS')
+                self.arb_gen.set_alcState(0)
+                self.h_gui['MultiToneBw'].callback()
+                # Set GUI MOD to On
+                self.h_gui['Mod_On_Off'].set_val(True, is_callback=False)
+                self.h_gui['RF_On_Off' ].set_val(True, is_callback=False)
+            except Exception as e:
+                print(f"Error: {e}")
+                self.h_gui['Mod_On_Off'].set_val(False, is_callback=True)
+                self.h_gui['RF_On_Off' ].set_val(False, is_callback=True)
+                if self.arb_gen is not None:
+                    self.arb_gen = None
+                # Clear Button state
+                self.sender().setChecked(False)
+        else:
+            print("MultiTone Off")
+            if self.arb_gen is not None:
+                self.arb_gen.stop()
+                self.arb_gen = None
+            self.h_gui['Mod_On_Off'].set_val(False, is_callback=False)
+
+    def cb_multitone_update(self):
+        print(f"MultiTone Bandwidth = {self.h_gui['MultiToneBw'].get_val()} MHz")
+        print(f"MultiTone Number of Tones = {self.h_gui['MultiToneNtones'].get_val()}")
+        if self.arb_gen is not None:
+            sig = mt.mutitone(BW=self.h_gui['MultiToneBw'].get_val(), Ntones=self.h_gui['MultiToneNtones'].get_val(),
+                              Fs=self.Params['ArbNaxFs'], Nfft=2048)
+            self.arb_gen.download_wfm(sig[0], wfmID='RfLabMultiTone')
+            self.arb_gen.play('RfLabMultiTone')
 
     def closeEvent(self, event):
         print("Exiting the application")

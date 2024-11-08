@@ -1,5 +1,5 @@
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QComboBox, QCheckBox, QSlider, QPushButton, QSpinBox, QLineEdit, QDoubleSpinBox
+from PyQt6.QtWidgets import QComboBox, QCheckBox, QSlider, QPushButton, QSpinBox, QLineEdit, QDoubleSpinBox, QDial
 
 
 class h_gui:
@@ -14,7 +14,7 @@ class h_gui:
                     self.event = "currentIndexChanged"
                 elif isinstance(obj, QCheckBox):
                     self.event = "stateChanged"
-                elif isinstance(obj, (QSlider, QSpinBox, QDoubleSpinBox)):
+                elif isinstance(obj, (QSlider, QSpinBox, QDoubleSpinBox,QDial)):
                     self.event = "valueChanged"
                 elif isinstance(obj, QPushButton):
                     self.event = "clicked"
@@ -48,7 +48,7 @@ class h_gui:
             self.obj.setCurrentIndex(value)
         elif isinstance(self.obj, QCheckBox):
             self.obj.setChecked(value)
-        elif isinstance(self.obj, QSlider):
+        elif isinstance(self.obj, (QSlider, QSpinBox, QDoubleSpinBox,QDial) ):
             self.obj.setValue(value)
         elif isinstance(self.obj, QPushButton):
             # if pushButton is used as a checkable button
@@ -84,7 +84,7 @@ class h_gui:
             return self.obj.currentIndex()
         elif isinstance(self.obj, QCheckBox):
             return self.obj.isChecked()
-        elif isinstance(self.obj, QSlider):
+        elif isinstance(self.obj, (QSlider, QSpinBox, QDoubleSpinBox,QDial)):
             return self.obj.value()
         else: #  isinstance(self.obj, QLineEdit):
             if self.val_type is None:

@@ -4,10 +4,7 @@
 # Thus, creating a multi-tone periodic signal in the time domain.
 
 from typing import Tuple
-
-import matplotlib.pyplot as plt
 import numpy as np
-
 
 def mutitone(BW: float, Ntones: int, Fs: float, Nfft: int = 4096)->Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
@@ -34,12 +31,13 @@ def mutitone(BW: float, Ntones: int, Fs: float, Nfft: int = 4096)->Tuple[np.ndar
         # Set the amplitude and phase
         X[bin_index] = A[i] * np.exp(1j * phi[i])
     # Generate the time domain signal
-    x = np.fft.ifft(X)
+    x = np.fft.ifft(np.fft.ifftshift(X))
     F = -Fs / 2 + Fs / Nfft * np.arange(Nfft)
     return x / np.max(np.abs(x)) , X , F
 
 # Test the function
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
     BW      = 3 # MHz
     Ntones  = 5
     Fs      = 20 # MHz
