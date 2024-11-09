@@ -42,23 +42,35 @@ class h_gui:
         # read the blockSignal state
         block_state = self.obj.signalsBlocked()
         # block the signal for all widgets
-        self.obj.blockSignals(True)
+        callback_is_called = True
+        if not is_callback:
+            self.obj.blockSignals(True)
         # update the value (TBD need to cover all widgets)
         if isinstance(self.obj, QComboBox):
             self.obj.setCurrentIndex(value)
         elif isinstance(self.obj, QCheckBox):
             self.obj.setChecked(value)
-        elif isinstance(self.obj, (QSlider, QSpinBox, QDoubleSpinBox,QDial) ):
+        elif isinstance(self.obj, QSlider):
             self.obj.setValue(value)
+        elif isinstance(self.obj, QDial):
+            self.obj.setValue(value)
+            callback_is_called = False
+        elif isinstance(self.obj, (QSpinBox, QDoubleSpinBox)):
+            self.obj.setValue(value)
+            callback_is_called = False
         elif isinstance(self.obj, QPushButton):
             # if pushButton is used as a checkable button
             if self.obj.isCheckable():
                 self.obj.setChecked(value)
         else: #  isinstance(self.obj, QLineEdit):
             self.obj.setText(str(value))
+            callback_is_called = False
 
-        if is_callback:
-            getattr(self.obj,self.event).emit()
+        if is_callback and not callback_is_called:
+            try:
+                getattr(self.obj,self.event).emit()
+            except:
+                getattr(self.obj,self.event).emit(value)
 
         # restore the blockSignal state
         self.obj.blockSignals(block_state)
