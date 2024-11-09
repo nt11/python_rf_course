@@ -65,26 +65,33 @@ def rcosdesign(beta:float, span:float, sps:int, shape:str='sqrt') -> np.ndarray:
     # Normalize to unit energy
     return h / np.sqrt(np.sum(h ** 2))
 
-def xrandn_bw(Fs: float, BW: float, N: int)->Tuple[np.ndarray, np.ndarray]:
+def xrandn_bw(Fs: float, BW: float, N: int = 1000)->Tuple[np.ndarray, np.ndarray]:
     '''
-    Generate a cyclic narrow band (controlled) signal
+    Generate a cyclic narrow band (controlled) signal. Neares BW possible to the desired BW
     '''
-    I   = int(np.floor(Fs/BW)) # Interpolation factor used as the sps of the raised cosine filter
+    # Tune the desired bandwidth to nearest value that gives an integer output length
+    output_len  = int(np.round( N * Fs / BW))
+    BW          = N * Fs / output_len
+    I           = int(np.floor(Fs/BW)) # Interpolation factor used as the sps of the raised cosine filter
+    print(f'Fs = {Fs}, BW = {BW}, N = {N}, I = {I}, output_len = {output_len}')
     # Generate the QPSK symbols
-    sym_in = np.exp(1j * 2 * np.pi * np.random.randint(0, 4, N) / 4)
+    sym_in      = np.exp(1j * 2 * np.pi * np.random.randint(0, 4, N) / 4)
     # Interpolate the symbols by I by using the raised cosine filter
     # Design the raised cosine filter
     # Generate the raised cosine filter
-    rc_filter = rcosdesign(beta:=0.125, span:=30, sps:=int(I), shape='normal')
+    rc_filter   = rcosdesign(beta:=0.125, span:=30, sps:=int(I), shape='normal')
 
     # Interpolate (QPSK) symbols using the raised cosine filter
-    sym_cyc = np.concatenate((sym_in[-span*3-1:-1], sym_in, sym_in[0:span*3]))
-    y  = upfirdn(rc_filter, sym_cyc, I, 1)
-    ii = (len(y) - len(sym_in)*I)//2 + 8*I
-    y  = y[ii: ii + len(sym_in)*I]
+    sym_cyc     = np.concatenate((sym_in[-span*10-1:-1], sym_in, sym_in[0:span*10]))
+    y           = upfirdn(rc_filter, sym_cyc, I, 1)
+
     # Resample the signal to the desired sampling frequency
     if Fs/BW != I:
-        y = mp.resample(y, Fs/BW, I,N=45, window=('blackmanharris',))
+        #y = mp.resample(y, Fs/BW, I,N=45, window=('blackmanharris',))
+        y = mp.resample(y, Fs / BW, I)
+
+    ii = (len(y) - output_len)//2
+    y  = y[ii: ii + output_len]
 
     return y
 
