@@ -76,6 +76,14 @@ class LabDemoMxgControl(QMainWindow):
                 self.sig_gen = self.rm.open_resource(f"TCPIP0::{ip}::inst0::INSTR")
                 print(f"Connected to {ip}")
                 # Read the signal generator status and update the GUI (RF On/Off, Modulation On/Off,Pout and Fc)
+                # Query the signal generator name
+                self.sig_gen.write("*IDN?")
+                idn         = self.sig_gen.read().strip()
+                # <company_name>, <model_number>, <serial_number>,<firmware_revision>
+                # Remove the firmware revision
+                idn         = idn.split(',')[0:3]
+                idn         = ', '.join(idn)
+                self.setWindowTitle(idn)
                 # Query RF On/Off mode
                 self.sig_gen.write(":OUTPUT:STATE?")
                 rf_state    = bool(int(self.sig_gen.read().strip()))
@@ -199,6 +207,8 @@ class LabDemoMxgControl(QMainWindow):
                 self.arb_gen.configure(fs=self.Params['ArbNaxFs']*1e6, iqScale=70 )
                 # Clear Errors
                 self.sig_gen_write('*CLS')
+                # Set the Auto Level Control to Off (ALC)
+                # Note - It is critical not to use boolean types for the SCPI commands!
                 self.arb_gen.set_alcState(0)
                 self.h_gui['MultiToneBw'].callback()
                 # Set GUI MOD to On
