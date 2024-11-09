@@ -119,7 +119,7 @@ class LabDemoVsaControl(QMainWindow):
             # Set the default value to the GUI object
             self.h_gui['Fc'].set_val(frequency_mhz)
 
-        self.vsa_write(f":FREQuency:CENTer {frequency_mhz} MHz") # can replace the '} MHz' with '}e6'
+        self.vsa_write(f"sense:FREQuency:CENTer {frequency_mhz} MHz") # can replace the '} MHz' with '}e6'
         print(f"Fc = {frequency_mhz} MHz")
 
     def cb_rbw(self):
@@ -132,7 +132,7 @@ class LabDemoVsaControl(QMainWindow):
             # Set the default value to the GUI object
             self.h_gui['RBW'].set_val(rbw)
 
-        self.vsa_write(f":BANDwidth:RESolution {rbw} MHz")
+        self.vsa_write(f"sense:BANDwidth:RESolution {rbw} MHz")
         print(f"RBW = {rbw} MHz")
 
     def cb_span(self):
@@ -145,7 +145,7 @@ class LabDemoVsaControl(QMainWindow):
             # Set the default value to the GUI object
             self.h_gui['Span'].set_val(span)
 
-        self.vsa_write(f":FREQuency:SPAN {span} MHz")
+        self.vsa_write(f"sense:FREQuency:SPAN {span} MHz")
         print(f"Span = {span} MHz")
 
     def cb_trace(self):
