@@ -84,7 +84,7 @@ def xrandn_bw(Fs: float, BW: float, N: int)->Tuple[np.ndarray, np.ndarray]:
     y  = y[ii: ii + len(sym_in)*I]
     # Resample the signal to the desired sampling frequency
     if Fs/BW != I:
-        y = mp.resample(y, Fs/BW, I)
+        y = mp.resample(y, Fs/BW, I,N=45, window=('blackmanharris',))
 
     return y
 
@@ -92,10 +92,10 @@ def xrandn_bw(Fs: float, BW: float, N: int)->Tuple[np.ndarray, np.ndarray]:
 # Test the function
 if __name__ == '__main__':
     # MATLAB Like behavior.
-    #mp.matlab_like()
-    import matplotlib
-    matplotlib.use('TkAgg')
-    plt.ion()
+    mp.matlab_like()
+    #import matplotlib
+    #matplotlib.use('TkAgg')
+    #plt.ion()
 
     Fs      = 20 # Hz
     BW      = 3.33  # Hz
