@@ -1,6 +1,5 @@
 import re
 import sys
-from signal import signal
 
 import pyvisa
 import pyarbtools as arb
