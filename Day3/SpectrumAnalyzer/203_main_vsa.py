@@ -228,11 +228,16 @@ class LabDemoVsaControl(QMainWindow):
         """Executes an amplitude autorange in VSA and waits for it to complete using SCPI commands."""
         if self.vsa is not None:
             y_max = -1000
+            y_min = 1000
             for i in range(10):
-                y,f = self.vsa_read_trace()
-                y_max = max(y_max, np.max(y))
+                y,f     = self.vsa_read_trace()
+                y_max   = max(y_max, np.max(y))
+                y_min   = min(y_min, np.min(y))
 
-            ref_level = np.ceil(( y_max + 10.0 ) / 10.0) * 10.0
+            ref_level   = np.ceil(( y_max + 5.0 ) / 5.0) * 5.0
+            scale2div   = np.round((ref_level - y_min)/10.0) + 1
+
+            self.vsa_write( f"DISP:WIND:TRAC:Y:PDIV {scale2div}")
             self.vsa_write( f"DISP:WIND:TRAC:Y:RLEV {ref_level}")
 
 
