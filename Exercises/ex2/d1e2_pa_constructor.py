@@ -36,17 +36,18 @@ class PA():
         :param N: Number of points to use in the calculation
         :return:
         """
-        if f not in self.measurements:
-            return None
 
-        gain_sum = 0
+        # Check if the frequency is in the dictionary
 
-        for entry in self.measurements[f][0:N]:
-            gain_sum += entry['gain']
-        return gain_sum / N
+        # Initialize the gain sum
 
-        # Another way to do it:
-        # return sum(list(map(lambda x: x['gain'], self.measurements[f][0:N])))/N
+        # Loop through the first N entries of the frequency
+
+        # Add the gain to the sum
+
+        # Return the average gain
+
+        pass
 
     def compute_output_p1db(self, f: int) -> float:
         """
@@ -55,15 +56,17 @@ class PA():
         :param f: Frequency to check
         :return: Output P1dB if found, None otherwise
         """
-        if f not in self.measurements: # Frequency wasn't in file
-            return None
 
-        ss_gain = self.compute_small_signal_gain(f)
-        for entry in self.measurements[f]:
-            if entry['gain'] <= ss_gain - 1.0: #p1dB
-                return entry['pout']
+        # Check if the frequency is in the dictionary
 
-        return None # If no P1dB was found
+        # Loop through the entries of the frequency
+
+        # Check if the gain is 1 dB below the small signal gain
+
+        # Return the output power
+
+        # If frequency or P1dB weren't found return None
+        pass
 
 
 if __name__ == "__main__":
