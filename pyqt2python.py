@@ -1,5 +1,5 @@
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QComboBox, QCheckBox, QSlider, QPushButton, QSpinBox, QLineEdit, QDoubleSpinBox, QDial
+from PyQt6.QtWidgets import QComboBox, QCheckBox, QSlider, QPushButton, QSpinBox, QLineEdit, QDoubleSpinBox, QDial, QProgressBar, QLCDNumber
 
 
 class h_gui:
@@ -58,10 +58,15 @@ class h_gui:
         elif isinstance(self.obj, (QSpinBox, QDoubleSpinBox)):
             self.obj.setValue(value)
             callback_is_called = False
+        elif isinstance(self.obj, QLCDNumber):
+            self.obj.display(value)
         elif isinstance(self.obj, QPushButton):
             # if pushButton is used as a checkable button
             if self.obj.isCheckable():
                 self.obj.setChecked(value)
+        elif isinstance(self.obj, QProgressBar):
+            self.obj.setValue(value)
+            callback_is_called = False
         else: #  isinstance(self.obj, QLineEdit):
             self.obj.setText(str(value))
             callback_is_called = False
@@ -96,7 +101,7 @@ class h_gui:
             return self.obj.currentIndex()
         elif isinstance(self.obj, QCheckBox):
             return self.obj.isChecked()
-        elif isinstance(self.obj, (QSlider, QSpinBox, QDoubleSpinBox,QDial)):
+        elif isinstance(self.obj, (QSlider, QSpinBox, QDoubleSpinBox,QDial, QProgressBar)):
             return self.obj.value()
         else: #  isinstance(self.obj, QLineEdit):
             if self.val_type is None:
