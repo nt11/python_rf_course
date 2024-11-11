@@ -22,6 +22,7 @@ class PA():
         :param f: Frequency to check
         :return: Output P1dB if found, None otherwise
         """
+        pass
 
 
 if __name__ == "__main__":
