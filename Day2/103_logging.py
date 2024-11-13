@@ -14,7 +14,7 @@ def divide(a, b):
        logging.info(f"Result is {result}")
        return result
    except ZeroDivisionError:
-       logging.error("Division by zero!")
+       logging.critical("Division by zero!")
        return None
 
 # Example usage
