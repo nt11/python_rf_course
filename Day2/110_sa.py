@@ -1,6 +1,5 @@
 import pyvisa
 
-
 if __name__ == '__main__':
     print("Results")
     print("-------")
@@ -20,18 +19,12 @@ if __name__ == '__main__':
         print(f"Serial Number: {serial}")
         print(f"Firmware Version: {firmware}")
 
-        # Set center frequency to 1 GHz
-        instr.write('FREQ:CENT 1 GHz')
-        # Set span to 50 MHz
-        instr.write('FREQ:SPAN 50 MHz')
-        # Set reference level to 0 dBm
-        instr.write('DISP:WIND:TRAC:Y:RLEV 0 dBm')
-        # Set RBW to 0.1 MHz
-        instr.write('BAND:RES 0.1 MHz')
-        # Set detector to RMS
-        instr.write(':DETector:TRACe1 AVERage')
-        # Set trace to clear write
-        instr.write(':TRACe1:TYPE WRIT')
+        instr.write('FREQ:CENT 1 GHz'               ) # Set center frequency to 1 GHz
+        instr.write('FREQ:SPAN 50 MHz'              ) # Set span to 50 MHz
+        instr.write('DISP:WIND:TRAC:Y:RLEV 0 dBm'   ) # Set reference level to 0 dBm
+        instr.write('BAND:RES 0.1 MHz'              ) # Set RBW to 0.1 MHz
+        instr.write(':DETector:TRACe1 AVERage'      ) # Set detector to average
+        instr.write(':TRACe1:TYPE WRIT'             ) # Set trace to write
 
         # Read all the above settings and print them
         cf_ghz      = float(instr.query('FREQ:CENT?'            ).strip())*1e-9
@@ -47,7 +40,6 @@ if __name__ == '__main__':
         print(f"RBW: {rbw_mhz:.2f} MHz")
         print(f"Detector: {detector}")
         print(f"Trace: {trace}")
-
 
     except pyvisa.errors.VisaIOError as e:
         print(f"Error: {e}")

@@ -88,6 +88,8 @@ class LabDemoVsaControl(QMainWindow):
 
             # Convert the binary data to a numpy array
             trace_data = np.array([float(x) for x in raw_data.split(',')])
+            #trace_data = np.array(list(map(float, raw_data.split(','))))
+
 
             # Get the current frequency settings
             start_freq  = float(self.vsa.query(':SENS:FREQ:START?'))
