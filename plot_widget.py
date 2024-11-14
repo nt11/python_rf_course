@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
+from PyQt6.QtCore import Qt
 import pyqtgraph as pg
 import numpy     as np
 
@@ -32,6 +33,7 @@ class PlotWidget(QWidget):
              legend         = None  ,
              xlabel         = 'X',
              ylabel         = 'Y',
+             line_width     = 2     ,
              title          = 'Title' ,
              xlog           = False ):
 
@@ -55,8 +57,16 @@ class PlotWidget(QWidget):
 
 
         # line is a character array with the first element being the color and the second being the line style
-        line += '-'
-        self.plot_widget.plot(x.flatten(), y.flatten(), pen=line[0], width=2, style=line[1])
+        if len(line) == 1:
+            line += '-'  # Default line style is solid
+        # Convert Matlab style to Qt style
+        style_dict = {
+            '-' : Qt.PenStyle.SolidLine    ,
+            '--': Qt.PenStyle.DashLine     ,
+            ':' : Qt.PenStyle.DotLine      ,
+            '-.': Qt.PenStyle.DashDotLine  }
+        self.plot_widget.plot(x.flatten(), y.flatten(),
+                              pen=pg.mkPen(line[0], width=line_width,style = style_dict[line[1:]]))
 
         self.plot_widget.setLabel('bottom'  , xlabel)
         self.plot_widget.setLabel('left'    , ylabel)

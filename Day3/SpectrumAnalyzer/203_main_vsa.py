@@ -244,7 +244,9 @@ class LabDemoVsaControl(QMainWindow):
     def timer_refresh_plot(self):
         if self.vsa is not None:
             y,x = self.vsa_read_trace()
-            self.plot_sa.plot( x , y , line='b-' , xlabel='Frequency (MHz)', ylabel='Power dBm', title='PSA', xlog=False, clf=True)
+            self.plot_sa.plot( x , y , line='y-' , line_width=30,
+                               xlabel='Frequency (MHz)', ylabel='Power dBm',
+                               title='PSA', xlog=False, clf=True)
 
     def cb_save(self):
         print("Save")
