@@ -1,7 +1,9 @@
 from pathlib import Path
+
+
 if __name__ == "__main__":
-    print("Results")
-    print("-------")
+   print("Results")
+   print("-------")
 
    # Current directory and files
    current = Path.cwd()
