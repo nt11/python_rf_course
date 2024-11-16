@@ -16,26 +16,13 @@ from pyqt2python import h_gui
 from plot_widget import PlotWidget
 from pyqtgraph.examples.optics import trace
 
+from o257_long_process import LongProcess
+
 
 def is_valid_ip(ip:str) -> bool:
     # Regular expression pattern for matching IP address
     ip_pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
     return re.match(ip_pattern, ip) is not None
-
-class LongProcess(QThread):
-    # Create a signal to update the progress bar
-    progress = pyqtSignal(int)
-    def __init__(self, vsa):
-        super().__init__()
-        self.vsa = vsa
-
-    def run(self):
-        for i in range(1, 101):
-            sleep(.1)
-            self.progress.emit(i)  # Emit the progress signal
-
-    def stop(self):
-        pass
 
 # The GUI controller clas inherit from QMainWindow object as defined in the ui file
 class LabDemoVsaControl(QMainWindow):
@@ -101,7 +88,7 @@ class LabDemoVsaControl(QMainWindow):
             self.vsa.write(':FORM:DATA ASCII')
             self.vsa.write(':TRAC? TRACE1')
 
-            # Read the binary data
+            # Read the ascii data
             raw_data = self.vsa.read()
 
             # Convert the binary data to a numpy array
@@ -137,12 +124,18 @@ class LabDemoVsaControl(QMainWindow):
                 idn         = idn.split(',')[0:3]
                 idn         = ', '.join(idn)
                 self.setWindowTitle(idn)
+                # Reset and clear all status (errors) of the spectrum analyzer
+                self.vsa.write("*RST")
+                self.vsa.write("*CLS")
+                sleep(.1)
                 # Aligned the spectrum analyzer to the GUI values
                 self.cb_fc()
                 self.cb_rbw()
                 self.cb_span()
                 self.cb_trace()
                 self.cb_detector()
+                # Sweep mode to continuous
+                self.vsa.write(":INITiate:CONTinuous ON")
 
             except Exception:
                 if self.vsa is not None:
@@ -259,7 +252,6 @@ class LabDemoVsaControl(QMainWindow):
             self.vsa_write( f"DISP:WIND:TRAC:Y:RLEV {ref_level}")
 
     def cb_hires_scan(self,i):
-        # stop the timer
         self.h_gui['HiResProgress'].set_val(i)
 
     def cb_hires_snapshot(self):
@@ -268,6 +260,8 @@ class LabDemoVsaControl(QMainWindow):
                 print("HiResSnapshot button Checked")
                 self.thread = LongProcess(self.vsa)
                 self.thread.progress.connect(self.cb_hires_scan)
+                self.thread.data.connect(self.cb_hi_res_plot)
+
                 self.timer.stop()
                 self.thread.start() # Start the thread calling the run method
             else:
@@ -285,6 +279,12 @@ class LabDemoVsaControl(QMainWindow):
                                line='y-' , line_width=1.5,
                                xlabel='Frequency (MHz)', ylabel='Power dBm',
                                title='PSA', xlog=False, clf=True)
+
+    def cb_hi_res_plot(self, freq, power):
+            self.plot_sa.plot( freq , power ,
+                               line='b-' , line_width=1.5,
+                               xlabel='Frequency (MHz)', ylabel='Power dBm',
+                               title='Hi-Res PSA', xlog=False, clf=True)
 
     def cb_save(self):
         print("Save")

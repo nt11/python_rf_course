@@ -277,29 +277,6 @@ class LabDemoVsaControl(QMainWindow):
                 self.thread.stop()
                 self.thread.wait()
 
-            # # Stop the timer to avoid updating the plot
-            # self.timer.stop()
-            # for i in range(100):
-            #     self.h_gui['HiResProgress'].set_val(i)
-            #     #self.h_gui['LcdNumber'].set_val(i)
-            #     sleep(0.5)
-            #
-            # self.h_gui['HiResProgress'].set_val(0)
-            #
-            # self.timer.start(1000)
-
-            # # Set the resolution bandwidth to 1 Hz
-            # self.vsa_write("sense:bandwidth:resolution 1 Hz")
-            # # Set the number of points to 10,000
-            # self.vsa_write("sense:sweep:points 10000")
-            # # Set the detector to average
-            # self.vsa_write("sense:detector average")
-            # # Set the trace to write
-            # self.vsa_write("trace1:mode write")
-            # # Set the trace to view
-            # self.vsa_write("trace1:mode view")
-            # # Set the trace to average
-            # self.vsa_write("trace1:type average")
 
     def timer_refresh_plot(self):
         if self.vsa is not None:
