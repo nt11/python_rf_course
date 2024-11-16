@@ -2,8 +2,6 @@ import sys
 import pyvisa
 from time import sleep, time
 import numpy as np
-import matplotlib.pyplot as plt
-
 
 def set_defaults(sa):
     # Reset and clear all status (errors) of the spectrum analyzer
@@ -12,7 +10,7 @@ def set_defaults(sa):
     # Set auto resolution bandwidth
     sa.write("sense:BANDwidth:RESolution:AUTO ON")
     # Set the trace to max hold
-    sa.write(":TRACe1:TYPE MAXHold")
+    sa.write(":TRACe1:TYPE WRITe")
     # Set the detector to positive peak
     sa.write("sense:DETEctor POSitive")
     # Set the sweep mode to single sweep
@@ -28,6 +26,10 @@ def wait_for_sweep(sa, timeout_seconds=10):
     Returns:
         bool: True if sweep completed, False if timeout occurred
     """
+
+    # Set the sweep mode to single sweep
+    sa.write("INITiate:CONTinuous OFF")
+
     # enable sweep bit monitoring (bit 4) for a single sweep
     sa.write(":STAT:OPER:ENAB 16")  # Enable bit 4 (sweep bit)
 
@@ -42,16 +44,7 @@ def wait_for_sweep(sa, timeout_seconds=10):
     start_time = time()
     while (time() - start_time) < timeout_seconds:
         # Query the Operation Event Register
-        # catch any errors
-        try:
-            message = sa.query(":STAT:OPER:EVEN?").strip()
-        except pyvisa.errors.VisaIOError:
-            sleep(.1)
-            set_defaults(sa)
-            message = '0'
-            continue
-
-        status = int(message)
+        status = int(sa.query(":STAT:OPER:EVEN?").strip())
 
         # Check if bit 4 (sweep complete) is set (16 in decimal)
         if status & 16:
@@ -66,7 +59,7 @@ def wait_for_sweep(sa, timeout_seconds=10):
 def read_max_peak(sa):
     # Set marker to maximum peak
     sa.write("CALC:MARK:MAX")
-    sleep(0.1)
+    sleep(0.01)
     # Query the marker frequency
     f = float(sa.query("CALC:MARK:X?").strip())*1e-6
     # Query the marker power
@@ -76,11 +69,6 @@ def read_max_peak(sa):
 
 
 if __name__ == "__main__":
-    import matplotlib
-
-    matplotlib.use('TkAgg')
-    plt.ion()
-
     # Connect to the instrument
     try:
         rm = pyvisa.ResourceManager('@py')
@@ -115,7 +103,7 @@ if __name__ == "__main__":
     max_level = np.ceil(np.max(p) / 5 + 1) * 5
     sa.write(f"DISP:WIND:TRAC:Y:RLEV {max_level}")
 
-    Fspan = np.logspace(2, -1, 4)  # Span in MHz
+    Fspan = np.logspace(2, -2, 5)  # Span in MHz
 
     for span in Fspan:
         sa.write(f"sense:FREQuency:CENTer {Fc} MHz")
@@ -128,6 +116,10 @@ if __name__ == "__main__":
 
         Fc, p = read_max_peak(sa)
         print(f'Center Frequency: {Fc} MHz, Span: {span} MHz, Peak: {p} dBm')
+
+    # print the last RBW
+    rbw_fine = sa.query("sense:BANDwidth:RESolution?")
+    print(f'Last RBW: {float(rbw_fine.strip()):.2f} Hz')
 
     # Close the connection
     sa.close()

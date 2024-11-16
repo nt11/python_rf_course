@@ -2,8 +2,6 @@ import sys
 import pyvisa
 from time import sleep, time
 import numpy as np
-import matplotlib.pyplot as plt
-
 
 def read_max_peak(sa):
     # Set marker to maximum peak
@@ -18,11 +16,6 @@ def read_max_peak(sa):
 
 
 if __name__ == "__main__":
-    import matplotlib
-
-    matplotlib.use('TkAgg')
-    plt.ion()
-
     # Connect to the instrument
     try:
         rm = pyvisa.ResourceManager('@py')
@@ -49,23 +42,16 @@ if __name__ == "__main__":
     # Set auto resolution bandwidth
     sa.write("sense:BANDwidth:RESolution:AUTO ON")
     # Set the trace to max hold
-    sa.write(":TRACe1:TYPE MAXHold")
+    sa.write(":TRACe1:TYPE WRITe")
     # Set the detector to positive peak
     sa.write("sense:DETEctor POSitive")
     # Set the sweep mode to single sweep
     sa.write("INITiate:CONTinuous ON")
 
     # Wait for the sweep to complete
-    sleep(5)
+    sleep(2)
 
     f, p = read_max_peak(sa)
-
-    plt.plot(f, p)
-    plt.xlabel('Frequency (MHz)')
-    plt.ylabel('Power (dBm)')
-    plt.title('Spectrum Analyzer')
-    plt.grid()
-    plt.show
 
     # Set the refrence level to the maximum
     max_level = np.ceil(np.max(p) / 5 + 1) * 5
@@ -79,19 +65,16 @@ if __name__ == "__main__":
     for span in Fspan:
         sa.write(f"sense:FREQuency:CENTer {Fc} MHz")
         sa.write(f"sense:FREQuency:SPAN {span} MHz")
-        sleep(5)
+        sleep(2)
         f, p = read_max_peak(sa)
-
-        plt.plot(f, p)
-        plt.xlabel('Frequency (MHz)')
-        plt.ylabel('Power (dBm)')
-        plt.title('Spectrum Analyzer')
-        plt.grid()
-        plt.show
 
         ii = np.argmax(p)
         Fc = f
         print(f'Center Frequency: {Fc} MHz, Span: {span} MHz, Peak: {p} dBm')
+
+    # print the last RBW
+    rbw_fine = sa.query("sense:BANDwidth:RESolution?")
+    print(f'Last RBW: {float(rbw_fine.strip()):.2f} Hz')
 
     # Close the connection
     sa.close()
