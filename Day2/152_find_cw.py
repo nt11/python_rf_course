@@ -5,6 +5,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def set_defaults(sa):
+    # Reset and clear all status (errors) of the spectrum analyzer
+    sa.write("*RST")
+    sa.write("*CLS")
+    # Set auto resolution bandwidth
+    sa.write("sense:BANDwidth:RESolution:AUTO ON")
+    # Set the trace to max hold
+    sa.write(":TRACe1:TYPE MAXHold")
+    # Set the detector to positive peak
+    sa.write("sense:DETEctor POSitive")
+    # Set the sweep mode to single sweep
+    sa.write("INITiate:CONTinuous OFF")
+
 def wait_for_sweep(sa, timeout_seconds=10):
     """
     Wait for a single sweep to complete on a Keysight Signal Analyzer
@@ -29,7 +42,16 @@ def wait_for_sweep(sa, timeout_seconds=10):
     start_time = time()
     while (time() - start_time) < timeout_seconds:
         # Query the Operation Event Register
-        status = int(sa.query(":STAT:OPER:EVEN?"))
+        # catch any errors
+        try:
+            message = sa.query(":STAT:OPER:EVEN?").strip()
+        except pyvisa.errors.VisaIOError:
+            sleep(.1)
+            set_defaults(sa)
+            message = '0'
+            continue
+
+        status = int(message)
 
         # Check if bit 4 (sweep complete) is set (16 in decimal)
         if status & 16:
@@ -44,6 +66,7 @@ def wait_for_sweep(sa, timeout_seconds=10):
 def read_max_peak(sa):
     # Set marker to maximum peak
     sa.write("CALC:MARK:MAX")
+    sleep(0.1)
     # Query the marker frequency
     f = float(sa.query("CALC:MARK:X?").strip())*1e-6
     # Query the marker power
@@ -76,40 +99,21 @@ if __name__ == "__main__":
         print(f'Failed to connect to the instrument at {ip}')
         sys.exit(1)
 
-    # Reset and clear all status (errors) of the spectrum analyzer
-    sa.write("*RST")
-    sa.write("*CLS")
+
     # Set the spectrum analyzer to maximal span
     sa.write("sense:FREQuency:SPAN:FULL")
-    # Set auto resolution bandwidth
-    sa.write("sense:BANDwidth:RESolution:AUTO ON")
-    # Set the trace to max hold
-    sa.write(":TRACe1:TYPE MAXHold")
-    # Set the detector to positive peak
-    sa.write("sense:DETEctor POSitive")
-    # Set the sweep mode to single sweep
-    sa.write("INITiate:CONTinuous OFF")
+    set_defaults(sa)
 
     # Wait for the sweep to complete
     if not wait_for_sweep(sa):
         print("Timeout waiting for sweep")
         sys.exit(1)
 
-    f, p = read_max_peak(sa)
-
-    plt.plot(f, p)
-    plt.xlabel('Frequency (MHz)')
-    plt.ylabel('Power (dBm)')
-    plt.title('Spectrum Analyzer')
-    plt.grid()
-    plt.show
+    Fc, p = read_max_peak(sa)
 
     # Set the refrence level to the maximum
     max_level = np.ceil(np.max(p) / 5 + 1) * 5
     sa.write(f"DISP:WIND:TRAC:Y:RLEV {max_level}")
-
-    # Find the center frequency
-    Fc = f  # Center frequency in MHz
 
     Fspan = np.logspace(2, -1, 4)  # Span in MHz
 
@@ -122,17 +126,7 @@ if __name__ == "__main__":
             print("Timeout waiting for sweep")
             sys.exit(1)
 
-        f, p = read_max_peak(sa)
-
-        plt.plot(f, p)
-        plt.xlabel('Frequency (MHz)')
-        plt.ylabel('Power (dBm)')
-        plt.title('Spectrum Analyzer')
-        plt.grid()
-        plt.show
-
-        ii = np.argmax(p)
-        Fc = f
+        Fc, p = read_max_peak(sa)
         print(f'Center Frequency: {Fc} MHz, Span: {span} MHz, Peak: {p} dBm')
 
     # Close the connection
