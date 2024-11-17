@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # Find the center frequency
     Fc = f  # Center frequency in MHz
 
-    Fspan = np.logspace(2, -1, 4)  # Span in MHz
+    Fspan = np.logspace(2, -2, 5)  # Span in MHz
 
     for span in Fspan:
         sa.write(f"sense:FREQuency:CENTer {Fc} MHz")

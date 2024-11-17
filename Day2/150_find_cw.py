@@ -4,19 +4,20 @@ from   time      import sleep,time
 import numpy as np
 import matplotlib.pyplot as plt
 
-def read_trace(sa):
+def read_trace_find_max(sa):
     # Query the instrument for the trace data
     sa.write(':FORM:DATA ASCII')
     sa.write(':TRAC? TRACE1')
     # Read the ascii data
     raw_data = sa.read()
     # Convert the string data to a numpy array
-    y = np.array([float(x) for x in raw_data.split(',')])
+    data_list = raw_data.split(',')
+    y = np.array([float(x) for x in data_list])
 
     # Get the current frequency settings
-    start_freq = float(sa.query(':SENS:FREQ:START?'))
-    stop_freq = float(sa.query(':SENS:FREQ:STOP?'))
-    num_points = int(sa.query(':SENS:SWE:POIN?'))
+    start_freq  = float(sa.query(':SENS:FREQ:START?'))
+    stop_freq   = float(sa.query(':SENS:FREQ:STOP?' ))
+    num_points  =   int(sa.query(':SENS:SWE:POIN?'  ))
 
     # Calculate frequency points
     f = np.linspace(start_freq * 1e-6, stop_freq * 1e-6, num_points)
@@ -25,7 +26,7 @@ def read_trace(sa):
     plt.xlabel('Frequency (MHz)')
     plt.ylabel('Power (dBm)')
     plt.title('Spectrum Analyzer')
-    plt.grid()
+    plt.grid('on')
     plt.show()
 
     ii  = np.argmax(y)
@@ -59,20 +60,20 @@ if __name__ == "__main__":
     # Reset and clear all status (errors) of the spectrum analyzer
     sa.write("*RST")
     sa.write("*CLS")
-    # Set the spectrum analyzer to maximal span 
+    # Set the spectrum analyzer to maximal span (*)
     sa.write("sense:FREQuency:SPAN:FULL")
-    # Set auto resolution bandwidth
+    # Set auto resolution bandwidth (*)
     sa.write("sense:BANDwidth:RESolution:AUTO ON")
-    # Set the trace to max hold
+    # Set the trace to clear/write
     sa.write(":TRACe1:TYPE WRITe")
     # Set the detector to positive peak
     sa.write("sense:DETEctor POSitive")
-    # Set the sweep mode to single sweep
+    # Set the sweep mode to continues (*)
     sa.write("INITiate:CONTinuous ON")
 
     # Wait for the sweep to complete
     sleep(2)
-    f,p = read_trace(sa)
+    f,p = read_trace_find_max(sa)
 
     # Set the refrence level to the maximum
     max_level = np.ceil(p/5 + 1)*5
@@ -81,14 +82,15 @@ if __name__ == "__main__":
     # Find the center frequency
     Fc  = f    # Center frequency in MHz
 
-    Fspan = np.logspace(2, -1, 4) # Span in MHz
+    # Set the span to 100:10:1:0.1:0.01 MHz (*)
+    Fspan = np.logspace(2, -2, 5) # Span in MHz
 
     for span in Fspan:
         sa.write(f"sense:FREQuency:CENTer {Fc} MHz")
         sa.write(f"sense:FREQuency:SPAN {span} MHz")
         sleep(2)
-        f,p = read_trace(sa)
-        Fc  = f
+        Fc,p = read_trace_find_max(sa)
+
         print(f'Center Frequency: {Fc} MHz, Span: {span} MHz, Peak: {p} dBm')
 
     # print the last RBW
