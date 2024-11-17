@@ -1,12 +1,12 @@
 import sys
 import pyvisa
-from time import sleep, time
+import time
 import numpy as np
 
 def read_max_peak(sa):
     # Set marker to maximum peak
     sa.write("CALC:MARK:MAX")
-    sleep(0.1)
+    time.sleep(0.1)
     # Query the marker frequency
     f = float(sa.query("CALC:MARK:X?").strip())*1e-6
     # Query the marker power
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     sa.write("INITiate:CONTinuous ON")
 
     # Wait for the sweep to complete
-    sleep(2)
+    time.sleep(2)
 
     f, p = read_max_peak(sa)
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     for span in Fspan:
         sa.write(f"sense:FREQuency:CENTer {Fc} MHz")
         sa.write(f"sense:FREQuency:SPAN {span} MHz")
-        sleep(2)
+        time.sleep(2)
         f, p = read_max_peak(sa)
 
         ii = np.argmax(p)

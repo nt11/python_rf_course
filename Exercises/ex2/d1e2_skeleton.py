@@ -5,6 +5,10 @@ class PA():
         :param serial: The serial of the PA
         """
 
+        # initialize self.measurements as an empty dictionary {}
+
+        # store the serial in the self.serial attribute
+
         # Read the file (page 1-83, 1-84 example 008)
 
         # Split the data into lines using the split("\n") method (look at page 1-122, example 022)
@@ -19,11 +23,10 @@ class PA():
 
             # Compute the gain by subtracting pout - pin
 
-            # Check if the frequency is not in the dictionary - if f not in self.measurements.keys()
+            if f not in self.measurements:  # check if frequency doesn't exist yet
+                self.measurements[f] = []
+            self.measurements[f].append({'pin': pin, 'pout': pout, 'gain': gain})
 
-                # If not, initialize the dictionary entry to an empty list - self.measurements[f] = []
-
-            # Add the data to the dictionary - self.measurements[f].append({'pin': ..., 'pout': ..., 'gain': ...})
 
         pass
 
@@ -73,7 +76,7 @@ if __name__ == "__main__":
     for ser in serials:
         db.append(PA(ser))
 
-    # print all P1dBs
+    # print all small signal gains and P1dBs
 
     for pa in db:
         print(f"Serial number {pa.serial}:")

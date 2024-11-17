@@ -1,6 +1,7 @@
 import sys
 import pyvisa
-from time import sleep, time
+import time
+from time import time # to avoid time.time in code
 import numpy as np
 
 def set_defaults(sa):
@@ -51,7 +52,7 @@ def wait_for_sweep(sa, timeout_seconds=10):
             return True
 
         # Wait a short time before polling again
-        sleep(.1)
+        time.sleep(.1)
 
     return False
 
@@ -59,7 +60,7 @@ def wait_for_sweep(sa, timeout_seconds=10):
 def read_max_peak(sa):
     # Set marker to maximum peak
     sa.write("CALC:MARK:MAX")
-    sleep(0.01)
+    time.sleep(0.01)
     # Query the marker frequency
     f = float(sa.query("CALC:MARK:X?").strip())*1e-6
     # Query the marker power
