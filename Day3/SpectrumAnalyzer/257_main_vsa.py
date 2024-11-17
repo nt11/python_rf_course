@@ -7,7 +7,7 @@ import pyarbtools as arb
 import yaml
 from PyQt6.QtWidgets    import QApplication, QMainWindow, QVBoxLayout
 from PyQt6.uic          import loadUi
-from PyQt6.QtCore       import QTimer
+from PyQt6.QtCore       import QTimer, QThread, pyqtSignal
 from time               import sleep
 
 import numpy as np
@@ -15,6 +15,8 @@ import numpy as np
 from pyqt2python import h_gui
 from plot_widget import PlotWidget
 from pyqtgraph.examples.optics import trace
+
+from o257_long_process import LongProcess
 
 
 def is_valid_ip(ip:str) -> bool:
@@ -27,7 +29,7 @@ class LabDemoVsaControl(QMainWindow):
     def __init__(self):
         super().__init__()
         # Load the UI file into the Class (LabDemoVsaControl) object
-        loadUi("BasicVsaControl_2.ui", self)
+        loadUi("BasicVsaControl_3.ui", self)
 
         self.setWindowTitle("MXG Control")
 
@@ -43,7 +45,6 @@ class LabDemoVsaControl(QMainWindow):
             AutoScale           = h_gui(self.pushButton         , self.cb_autoscale         ),
             HiResSnapshot       = h_gui(self.pushButton_3       , self.cb_hires_snapshot    ),
             HiResProgress       = h_gui(self.progressBar        , None              ),
-            LcdNumber           = h_gui(self.lcdNumber          , None              ),
             Save                = h_gui(self.actionSave         , self.cb_save              ),
             Load                = h_gui(self.actionLoad         , self.cb_load              ))
 
@@ -87,7 +88,7 @@ class LabDemoVsaControl(QMainWindow):
             self.vsa.write(':FORM:DATA ASCII')
             self.vsa.write(':TRAC? TRACE1')
 
-            # Read the binary data
+            # Read the ascii data
             raw_data = self.vsa.read()
 
             # Convert the binary data to a numpy array
@@ -123,12 +124,18 @@ class LabDemoVsaControl(QMainWindow):
                 idn         = idn.split(',')[0:3]
                 idn         = ', '.join(idn)
                 self.setWindowTitle(idn)
+                # Reset and clear all status (errors) of the spectrum analyzer
+                self.vsa.write("*RST")
+                self.vsa.write("*CLS")
+                sleep(.1)
                 # Aligned the spectrum analyzer to the GUI values
                 self.cb_fc()
                 self.cb_rbw()
                 self.cb_span()
                 self.cb_trace()
                 self.cb_detector()
+                # Sweep mode to continuous
+                self.vsa.write(":INITiate:CONTinuous ON")
 
             except Exception:
                 if self.vsa is not None:
@@ -244,36 +251,40 @@ class LabDemoVsaControl(QMainWindow):
             self.vsa_write( f"DISP:WIND:TRAC:Y:PDIV {scale2div}")
             self.vsa_write( f"DISP:WIND:TRAC:Y:RLEV {ref_level}")
 
+    def cb_hires_scan(self,i):
+        self.h_gui['HiResProgress'].set_val(i)
+
     def cb_hires_snapshot(self):
         if self.vsa is not None:
-            # Stop the timer to avoid updating the plot
-            self.timer.stop()
-            for i in range(100):
-                self.h_gui['HiResProgress'].set_val(i)
-                #self.h_gui['LcdNumber'].set_val(i)
-                sleep(0.5)
+            if self.sender().isChecked():
+                print("HiResSnapshot button Checked")
+                self.thread = LongProcess(self.vsa)
+                self.thread.progress.connect(self.cb_hires_scan)
+                self.thread.data.connect(self.cb_hi_res_plot)
 
-            self.h_gui['HiResProgress'].set_val(0)
+                self.timer.stop()
+                self.thread.start() # Start the thread calling the run method
+            else:
+                print("HiResSnapshot button Cleared")
+                self.thread.stop()
+                self.thread.wait()
+                self.h_gui['HiResProgress'].set_val(0)
+                self.timer.start()
 
-            self.timer.start(1000)
-
-            # # Set the resolution bandwidth to 1 Hz
-            # self.vsa_write("sense:bandwidth:resolution 1 Hz")
-            # # Set the number of points to 10,000
-            # self.vsa_write("sense:sweep:points 10000")
-            # # Set the detector to average
-            # self.vsa_write("sense:detector average")
-            # # Set the trace to write
-            # self.vsa_write("trace1:mode write")
-            # # Set the trace to view
-            # self.vsa_write("trace1:mode view")
-            # # Set the trace to average
-            # self.vsa_write("trace1:type average")
 
     def timer_refresh_plot(self):
         if self.vsa is not None:
             y,x = self.vsa_read_trace()
-            self.plot_sa.plot( x , y , line='b-' , xlabel='Frequency (MHz)', ylabel='Power dBm', title='PSA', xlog=False, clf=True)
+            self.plot_sa.plot( x , y ,
+                               line='y-' , line_width=1.5,
+                               xlabel='Frequency (MHz)', ylabel='Power dBm',
+                               title='PSA', xlog=False, clf=True)
+
+    def cb_hi_res_plot(self, freq, power):
+            self.plot_sa.plot( freq , power ,
+                               line='b-' , line_width=1.5,
+                               xlabel='Frequency (MHz)', ylabel='Power dBm',
+                               title='Hi-Res PSA', xlog=False, clf=True)
 
     def cb_save(self):
         print("Save")

@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.uic import loadUi
 
 from pyqt2python import h_gui
-import o168_mutitone as mt
+import o218_mutitone as mt
 
 def is_valid_ip(ip:str) -> bool:
     # Regular expression pattern for matching IP address

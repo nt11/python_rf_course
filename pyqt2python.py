@@ -63,6 +63,7 @@ class h_gui:
         elif isinstance(self.obj, QPushButton):
             # if pushButton is used as a checkable button
             if self.obj.isCheckable():
+                callback_is_called = False
                 self.obj.setChecked(value)
         elif isinstance(self.obj, QProgressBar):
             self.obj.setValue(value)

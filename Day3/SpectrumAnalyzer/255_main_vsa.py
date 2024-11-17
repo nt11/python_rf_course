@@ -8,6 +8,7 @@ import yaml
 from PyQt6.QtWidgets    import QApplication, QMainWindow, QVBoxLayout
 from PyQt6.uic          import loadUi
 from PyQt6.QtCore       import QTimer
+from time               import sleep
 
 import numpy as np
 
@@ -26,7 +27,7 @@ class LabDemoVsaControl(QMainWindow):
     def __init__(self):
         super().__init__()
         # Load the UI file into the Class (LabDemoVsaControl) object
-        loadUi("BasicVsaControl.ui", self)
+        loadUi("BasicVsaControl_2.ui", self)
 
         self.setWindowTitle("MXG Control")
 
@@ -40,6 +41,9 @@ class LabDemoVsaControl(QMainWindow):
             Trace               = h_gui(self.comboBox           , self.cb_trace             ),
             Detector            = h_gui(self.comboBox_2         , self.cb_detector          ),
             AutoScale           = h_gui(self.pushButton         , self.cb_autoscale         ),
+            HiResSnapshot       = h_gui(self.pushButton_3       , self.cb_hires_snapshot    ),
+            HiResProgress       = h_gui(self.progressBar        , None              ),
+            LcdNumber           = h_gui(self.lcdNumber          , None              ),
             Save                = h_gui(self.actionSave         , self.cb_save              ),
             Load                = h_gui(self.actionLoad         , self.cb_load              ))
 
@@ -88,8 +92,6 @@ class LabDemoVsaControl(QMainWindow):
 
             # Convert the binary data to a numpy array
             trace_data = np.array([float(x) for x in raw_data.split(',')])
-            #trace_data = np.array(list(map(float, raw_data.split(','))))
-
 
             # Get the current frequency settings
             start_freq  = float(self.vsa.query(':SENS:FREQ:START?'))
@@ -242,11 +244,39 @@ class LabDemoVsaControl(QMainWindow):
             self.vsa_write( f"DISP:WIND:TRAC:Y:PDIV {scale2div}")
             self.vsa_write( f"DISP:WIND:TRAC:Y:RLEV {ref_level}")
 
+    def cb_hires_snapshot(self):
+        if self.vsa is not None:
+            # Stop the timer to avoid updating the plot
+            self.timer.stop()
+            for i in range(100):
+                self.h_gui['HiResProgress'].set_val(i)
+                #self.h_gui['LcdNumber'].set_val(i)
+                sleep(0.5)
+
+            self.h_gui['HiResProgress'].set_val(0)
+
+            self.timer.start(1000)
+
+            # # Set the resolution bandwidth to 1 Hz
+            # self.vsa_write("sense:bandwidth:resolution 1 Hz")
+            # # Set the number of points to 10,000
+            # self.vsa_write("sense:sweep:points 10000")
+            # # Set the detector to average
+            # self.vsa_write("sense:detector average")
+            # # Set the trace to write
+            # self.vsa_write("trace1:mode write")
+            # # Set the trace to view
+            # self.vsa_write("trace1:mode view")
+            # # Set the trace to average
+            # self.vsa_write("trace1:type average")
 
     def timer_refresh_plot(self):
         if self.vsa is not None:
             y,x = self.vsa_read_trace()
-            self.plot_sa.plot( x , y , line='b-' , xlabel='Frequency (MHz)', ylabel='Power dBm', title='PSA', xlog=False, clf=True)
+            self.plot_sa.plot( x , y ,
+                               line='y-' , line_width=1.5,
+                               xlabel='Frequency (MHz)', ylabel='Power dBm',
+                               title='PSA', xlog=False, clf=True)
 
     def cb_save(self):
         print("Save")
