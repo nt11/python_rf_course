@@ -162,7 +162,7 @@ class LabDemoMxgControl(QMainWindow):
 
     def cb_pout_slider( self ):
         val = self.h_gui['Pout'].get_val()
-        self.sig_gen_write(f":POWER {val}dBm")
+        self.sig_gen_write(f":POWER {val} dBm")
 
         print(f"Pout = {val} dBm")
 
@@ -184,7 +184,6 @@ class LabDemoMxgControl(QMainWindow):
         except FileNotFoundError:
             print(f"File not found: {self.file_name}")
             raise
-
 
         # Set the default values to the GUI objects
         for key, value in self.Params.items():
