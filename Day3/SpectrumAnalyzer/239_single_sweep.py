@@ -67,9 +67,7 @@ class SpectrumAnalyzer:
             self.sa.write(":INITiate:IMMediate")
 
             # Wait for operation complete
-            self.sa.write("*OPC?")
-            # Read the response (1 indicates completion)
-            response = self.sa.read()
+            response = self.sa.query("*OPC?")
 
             sweep_duration = time.perf_counter() - start_time
             print(f"Sweep completed in {sweep_duration:.2f} seconds")
