@@ -106,8 +106,9 @@ class LabDemoVsaControl(QMainWindow):
             print("Connect button Checked")
             # Open the connection to the signal generator
             try:
-                ip           = self.h_gui['IP'].get_val()
-                self.vsa = self.rm.open_resource(f"TCPIP0::{ip}::inst0::INSTR")
+                ip              = self.h_gui['IP'].get_val()
+                self.vsa        = self.rm.open_resource(f"TCPIP0::{ip}::inst0::INSTR")
+                self.vsa.timeout = 5000
                 print(f"Connected to {ip}")
                 # Read the signal generator status and update the GUI (RF On/Off, Modulation On/Off,Pout and Fc)
                 # Query the signal generator name
