@@ -11,11 +11,12 @@ class Dog:
         self.age += 1
         return f"{self.name} is now {self.age} years old."
 
-# Creating instances of the Dog class
-buddy = Dog("Buddy", 3, "Golden Retriever")
-max = Dog("Max", 5, "Beagle")
+if __name__ == "__main__":
+    # Creating instances of the Dog class
+    buddy = Dog("Buddy", 3, "Golden Retriever")
+    max = Dog("Max", 5, "Beagle")
 
-# Using methods of the Dog class
-print(buddy.bark())
-print(max.birthday())
-print(f"{max.name} is a {max.breed}.")
+    # Using methods of the Dog class
+    print(buddy.bark())
+    print(max.birthday())
+    print(f"{max.name} is a {max.breed}.")
