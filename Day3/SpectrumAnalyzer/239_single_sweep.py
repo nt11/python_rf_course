@@ -57,7 +57,7 @@ class SpectrumAnalyzer:
             self.sa.write(":INITiate:CONTinuous OFF")
 
             # Clear data buffer and status
-            self.sa.write(":ABORt")
+            self.sa.write(":ABORt") # Abort any ongoing sweep
             self.sa.write("*CLS")
 
             print("Starting sweep...")
@@ -87,8 +87,8 @@ class SpectrumAnalyzer:
     def get_trace_data(self):
         """Read trace data after sweep completion."""
         try:
-            # Query trace data
-            p = self.sa.query_ascii_values(":TRACe:DATA? TRACE1", container=list)
+            # Query trace data PyVISA method for reading numerical data from instruments
+            p = self.sa.query_ascii_values(":TRACe:DATA? TRACE1", container=np.array)
             # Build the frequency list
             start_freq  = float(self.sa.query(":FREQuency:START?" ).strip())*1e-6
             stop_freq   = float(self.sa.query(":FREQuency:STOP?"  ).strip())*1e-6
@@ -121,8 +121,8 @@ def main():
 
         # Setup measurement parameters
         CENTER_FREQ = 1111  # 1 GHz
-        SPAN = 50  # 10 MHz
-        RBW = 100  # 100 Hz (fine resolution)
+        SPAN        = 50    # 10 MHz
+        RBW         = 100   # 100 Hz (fine resolution)
 
         # Configure the analyzer
         sa.setup_measurement(CENTER_FREQ, SPAN, RBW)
