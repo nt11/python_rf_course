@@ -85,24 +85,18 @@ class LabDemoVsaControl(QMainWindow):
         if self.vsa is not None:
             # Query the instrument for the trace data
             trace_id = 1
-            self.vsa.write(':FORM:DATA ASCII')
-            self.vsa.write(':TRAC? TRACE1')
-
-            # Read the ascii data
-            raw_data = self.vsa.read()
-
-            # Convert the binary data to a numpy array
-            trace_data = np.array([float(x) for x in raw_data.split(',')])
+            # Query trace data PyVISA method for reading numerical data from instruments
+            p           = self.vsa.query_ascii_values(":TRACe:DATA? TRACE1", container=np.array)
+            # Build the frequency list
 
             # Get the current frequency settings
-            start_freq  = float(self.vsa.query(':SENS:FREQ:START?'))
-            stop_freq   = float(self.vsa.query(':SENS:FREQ:STOP?' ))
-            num_points  =   int(self.vsa.query(':SENS:SWE:POIN?'  ))
-
+            start_freq  = float(self.vsa.query(":FREQuency:START?" ).strip())*1e-6
+            stop_freq   = float(self.vsa.query(":FREQuency:STOP?"  ).strip())*1e-6
+            num_points  =   int(self.vsa.query(":SENSe:SWEep:POIN?").strip())
             # Calculate frequency points
-            f           = np.linspace(start_freq*1e-6, stop_freq*1e-6, num_points)
+            f           = np.linspace(start_freq, stop_freq, num_points)
 
-            return trace_data, f
+            return p, f
 
 
     # Callback function for the Connect button
