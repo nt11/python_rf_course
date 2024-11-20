@@ -99,7 +99,7 @@ class LabDemoMxgControl(QMainWindow):
                 # Update the GUI (no callbacks)
                 self.h_gui['RF_On_Off'  ].set_val( rf_state)
                 self.h_gui['Mod_On_Off' ].set_val(mod_state)
-                self.h_gui['Pout'       ].set_val(output_power_dbm)
+                self.h_gui['Pout'       ].set_val(output_power_dbm, is_callback=True) # True so the LCD will be updated
                 self.h_gui['Fc'         ].set_val(fc)
             except Exception:
                 if self.sig_gen is not None:
