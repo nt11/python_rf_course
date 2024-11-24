@@ -2,13 +2,14 @@ import re
 import sys
 
 import pyvisa
-# FIXME: Add pyarbtools (name it arb)
+# EX4: Add pyarbtools, name it arb. (slide 3-51 example 219)
 
 import yaml
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.uic import loadUi
 
-# EX4: import h_gui and multitone from the course repository
+# EX4: import h_gui and multitone from the course repository (slide 2-7)
+# EX4: the base directory for the course is python_rf_course (from python_rf_course. ... import ...)
 
 def is_valid_ip(ip:str) -> bool:
     # Regular expression pattern for matching IP address
@@ -34,19 +35,20 @@ class LabDemoMxgControl(QMainWindow):
             Fc                  = h_gui(self.lineEdit_2         , self.cb_fc                ),
             Pout                = h_gui(self.horizontalSlider   , self.cb_pout_slider       ),
             Save                = h_gui(self.actionSave         , self.cb_save              ),
-            Load                = h_gui(self.actionLoad         , self.cb_load              ),
-            MultiTone_On_Off    = h_gui(self.pushButton_4       , self.cb_multitone_on_off  ),
-            MultiToneBw         = h_gui(self.doubleSpinBox      , self.cb_multitone_update  ),
-            MultiToneNtones     = h_gui(self.dial               , self.cb_multitone_update  ))
+            Load                = h_gui(self.actionLoad         , self.cb_load              ))
+        # EX4: Add the new widgets to the h_gui dictionary use the following callbacks:
+        # EX4: cb_multitone_update, cb_multitone_on_off (slide 3-45 example 210)
+
 
         # Create a Resource Manager object
-        self.rm         = pyvisa.ResourceManager('@py')
+        self.rm         = pyvisa.ResourceManager('@py') # EX4: make sure - '@py' is for the PyVISA-py backend
         self.sig_gen    = None
-        self.arb_gen    = None
+        # EX4: define similarly arb_gen
 
 
         # Load the configuration/default values from the YAML file
         self.Params     = None
+        # EX4: Don't forget to update the YAML file
         self.file_name  = "sig_gen_defaults.yaml"
         self.h_gui['Load'].emit() #  self.cb_load
 
@@ -73,26 +75,19 @@ class LabDemoMxgControl(QMainWindow):
                 self.sig_gen = self.rm.open_resource(f"TCPIP0::{ip}::inst0::INSTR")
                 print(f"Connected to {ip}")
                 # Read the signal generator status and update the GUI (RF On/Off, Modulation On/Off,Pout and Fc)
-                # Query the signal generator name
-                self.sig_gen.write("*IDN?")
-                idn         = self.sig_gen.read().strip()
-                # <company_name>, <model_number>, <serial_number>,<firmware_revision>
-                # Remove the firmware revision
-                idn         = idn.split(',')[0:3]
-                idn         = ', '.join(idn)
-                self.setWindowTitle(idn)
+                # EX4: Query the signal generator IDN string (Slide 2-54 ex 109)
+                # EX4: Note the fields are <company_name>, <model_number>, <serial_number>,<firmware_revision>
+                # EX4: split and join the fields without the firmware revision seperated by a comma
+                # EX4: Update the window title with the joined string (Page 2-33 ex 200)
+
                 # Query RF On/Off mode
-                self.sig_gen.write(":OUTPUT:STATE?")
-                rf_state    = bool(int(self.sig_gen.read().strip()))
+                rf_state            = bool(int(self.sig_gen.query(":OUTPUT:STATE?"      ).strip()))
                 # Query Modulation On/Off mode
-                self.sig_gen.write(":OUTPUT:MOD:STATE?")
-                mod_state   = bool(int(self.sig_gen.read().strip()))
+                mod_state           = bool(int(self.sig_gen.query(":OUTPUT:MOD:STATE?"  ).strip()))
                 # Query Output Power
-                self.sig_gen.write(":POWER?")
-                output_power_dbm = float(self.sig_gen.read())
+                output_power_dbm    = float(self.sig_gen.query(":POWER?").strip())
                 # Query Frequency
-                self.sig_gen.write(":FREQ?")
-                fc          = float(self.sig_gen.read()) * 1e-6
+                fc                  = float(self.sig_gen.query(":FREQ?" ).strip()) * 1e-6
 
                 # Update the GUI (no callbacks)
                 self.h_gui['RF_On_Off'  ].set_val( rf_state)
@@ -194,45 +189,60 @@ class LabDemoMxgControl(QMainWindow):
 
     # Callback function for the MultiTone On/Off button
     def cb_multitone_on_off(self):
-        if self.sender().isChecked():
-            print("MultiTone On")
-            try:
-                # Create ARB object
-                mxg_ip         = self.h_gui['IP'].get_val()
-                self.arb_gen    = arb.instruments.VSG(mxg_ip, timeout=3)
-                self.arb_gen.configure(fs=self.Params['ArbNaxFs']*1e6, iqScale=70 )
-                # Clear Errors
-                self.sig_gen_write('*CLS')
-                # Set the Auto Level Control to Off (ALC)
-                # Note - It is critical not to use boolean types for the SCPI commands!
-                self.arb_gen.set_alcState(0)
-                self.h_gui['MultiToneBw'].callback()
+        # EX4: Implement the MultiTone On/Off button callback function
+        # EX4: if the button is checked, create an ARB object and configure it (slide 3-36 example 203)
+        # EX4: if...
+            # EX4: use try and except to catch any exceptions
+                # EX4: Get the MXG IP from the h_gui using get_val() method (slide 3-46 example 210)
+
+                # EX4: Create an ARB object using the VSG class from the arb module (slide 3-51 example 219)
+
+                # EX4: Get the maximal ARB Fs from the self.Params dictionary
+
+                # EX4: Configure the ARB object using the configure method (slide 3-51 example 219)
+
+                # EX4: Clear Errors CLS
+
+                # EX4: Set the Auto Level Control to Off (ALC) (slide 3-51 example 219)
+                # EX4: Note - It is critical not to use boolean types for this SCPI function
+
+                # EX4: CALL the update function cb_multitone_update (the same used for the callback)
+
                 # Set GUI MOD to On
                 self.h_gui['Mod_On_Off'].set_val(True, is_callback=False)
                 self.h_gui['RF_On_Off' ].set_val(True, is_callback=False)
-            except Exception as e:
-                print(f"Error: {e}")
-                self.h_gui['Mod_On_Off'].set_val(False, is_callback=True)
-                self.h_gui['RF_On_Off' ].set_val(False, is_callback=True)
-                if self.arb_gen is not None:
-                    self.arb_gen = None
-                # Clear Button state
-                self.sender().setChecked(False)
-        else:
-            print("MultiTone Off")
-            if self.arb_gen is not None:
-                self.arb_gen.stop()
-                self.arb_gen = None
-            self.h_gui['Mod_On_Off'].set_val(False, is_callback=False)
+
+            # EX4: handle the exception
+            # EX4: except Exception as e:
+
+                # EX4: Print the exception`
+
+                # EX4: Switch MOD to Off and RF to Off using the set_val method of the h_gui dictionary
+                # EX4: NOTE - the is_callback should be set to True
+
+                # EX4: set the arb_gen to None
+
+                # EX4: Clear Button state use the sender method to get the button object and set it to False
+                # EX4: self.sender().setChecked(False)
+        # EX4: uncomment the else block
+        # else:
+        #     print("MultiTone Off")
+        #     if self.arb_gen is not None:
+        #         self.arb_gen.stop()
+        #         self.arb_gen = None
+        #     self.h_gui['Mod_On_Off'].set_val(False, is_callback=False)
 
     def cb_multitone_update(self):
-        print(f"MultiTone Bandwidth = {self.h_gui['MultiToneBw'].get_val()} MHz")
-        print(f"MultiTone Number of Tones = {self.h_gui['MultiToneNtones'].get_val()}")
-        if self.arb_gen is not None:
-            sig = mutitone(BW=self.h_gui['MultiToneBw'].get_val(), Ntones=self.h_gui['MultiToneNtones'].get_val(),
-                           Fs=self.Params['ArbNaxFs'], Nfft=2048)
-            self.arb_gen.download_wfm(sig[0], wfmID='RfLabMultiTone')
-            self.arb_gen.play('RfLabMultiTone')
+        pass
+        # EX4: print the input BW and Ntones from the h_gui dictionary
+
+        # EX4: if the arb_gen is not None
+            # EX4: calculate the new signal by calling the mutitone function (slide 3-50 example o218)
+            # EX4: Get the bandwidth and Ntones from the h_gui dictionary
+            # EX4: get the ARB Fs from the Params dictionary
+            # EX4: change the default Nfft to achieve a frequency resolution of 15kHz
+            # EX4: download it to the ARB generator (using download_wfm) and play it (slide 3-51 example 219)
+
 
     def closeEvent(self, event):
         print("Exiting the application")
