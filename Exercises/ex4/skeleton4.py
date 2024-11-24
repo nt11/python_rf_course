@@ -38,8 +38,8 @@ class LabDemoMxgControl(QMainWindow):
             Save                = h_gui(self.actionSave         , self.cb_save              ),
             Load                = h_gui(self.actionLoad         , self.cb_load              ))
         # EX4: Add the new widgets to the h_gui dictionary use the following callbacks:
-        # EX4: cb_multitone_update, cb_multitone_on_off (slide 3-45 example 210)
-
+        # EX4:  cb_multitone_update (use the same callback for the BW and the Ntones)
+        # EX4:  cb_multitone_on_off (slide 3-45 example 210)
 
         # Create a Resource Manager object
         self.rm         = pyvisa.ResourceManager('@py') # EX4: make sure - '@py' is for the PyVISA-py backend
