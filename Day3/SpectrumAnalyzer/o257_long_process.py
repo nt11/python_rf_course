@@ -1,20 +1,6 @@
-import re
-import sys
-from signal import signal
-
-import pyvisa
-import pyarbtools as arb
-import yaml
-from PyQt6.QtWidgets    import QApplication, QMainWindow, QVBoxLayout
-from PyQt6.uic          import loadUi
-from PyQt6.QtCore       import QTimer, QThread, pyqtSignal
-import time
+from PyQt6.QtCore       import QThread, pyqtSignal
 
 import numpy as np
-
-from pyqt2python import h_gui
-from plot_widget import PlotWidget
-from pyqtgraph.examples.optics import trace
 
 
 class LongProcess(QThread):

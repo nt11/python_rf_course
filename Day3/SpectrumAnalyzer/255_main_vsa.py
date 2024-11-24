@@ -1,9 +1,7 @@
 import re
 import sys
-from signal import signal
 
 import pyvisa
-import pyarbtools as arb
 import yaml
 from PyQt6.QtWidgets    import QApplication, QMainWindow, QVBoxLayout
 from PyQt6.uic          import loadUi
@@ -12,9 +10,8 @@ from time               import sleep
 
 import numpy as np
 
-from pyqt2python import h_gui
-from plot_widget import PlotWidget
-from pyqtgraph.examples.optics import trace
+from utils.pyqt2python import h_gui
+from utils.plot_widget import PlotWidget
 
 
 def is_valid_ip(ip:str) -> bool:

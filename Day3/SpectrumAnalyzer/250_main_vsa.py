@@ -1,14 +1,12 @@
 import re
 import sys
-from signal import signal
 
 import pyvisa
-import pyarbtools as arb
 import yaml
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.uic import loadUi
 
-from pyqt2python import h_gui
+from utils.pyqt2python import h_gui
 
 def is_valid_ip(ip:str) -> bool:
     # Regular expression pattern for matching IP address
