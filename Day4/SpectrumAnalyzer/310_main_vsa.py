@@ -28,7 +28,7 @@ class LabDemoVsaControl(QMainWindow):
         # Load the UI file into the Class (LabDemoVsaControl) object
         loadUi("BasicVsaControl_3.ui", self)
 
-        self.setWindowTitle("MXG Control")
+        self.setWindowTitle("SA Control")
 
         # Interface of the GUI Widgets to the Python code
         self.h_gui = dict(
