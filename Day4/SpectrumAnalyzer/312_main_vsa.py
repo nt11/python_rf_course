@@ -74,8 +74,9 @@ class LabDemoVsaControl(QMainWindow):
         super().__init__()
         # Load the UI file into the Class (LabDemoVsaControl) object
         loadUi("BasicVsaControl_4.ui", self)
+        # Create Logger
         self.log = setup_logger(text_browser=self.textBrowser,name='sa_log', level=logging.DEBUG)
-        logging.getLogger('sa_log').propagate = False
+        logging.getLogger('sa_log').propagate = True
         #suppress_external_logging()
 
         self.setWindowTitle("SA Control")
@@ -128,6 +129,10 @@ class LabDemoVsaControl(QMainWindow):
             # Add logging to the write command (Debug Level)
             self.log.debug(f"VSA Write: {cmd}")
             self.vsa.write(cmd)
+            # Check for errors
+            e = self.vsa.query('SYST:ERR?').strip().split(',')
+            if int(e[0]) != 0:
+                self.log.error(f"Error: {e[1]}")
 
     def vsa_query(self, cmd:str):
         if self.vsa is not None:
