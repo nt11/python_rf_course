@@ -28,7 +28,6 @@ class LabDemoVsaControl(QMainWindow):
             IP                  = h_gui(self.lineEdit_4         , self.cb_ip                ),
             Fc                  = h_gui(self.lineEdit           , self.cb_fc                ),
             Save                = h_gui(self.actionSave         , self.cb_save              ),
-            Save                = h_gui(self.actionSave         , self.cb_save              ),
             Load                = h_gui(self.actionLoad         , self.cb_load              ))
 
         # Create a Resource Manager object

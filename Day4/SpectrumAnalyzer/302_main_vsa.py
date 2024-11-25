@@ -124,7 +124,7 @@ class LabDemoVsaControl(QMainWindow):
             self.h_gui['RBW'].set_val(rbw)
 
         self.vsa_write(f":BANDwidth:RESolution {rbw} Hz")
-        print(f"RBW = {rbw} Hz")
+        print(f"RBW = {rbw} MHz")
 
     def cb_span(self):
         # Check if the frequency is a valid float number
