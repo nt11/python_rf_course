@@ -35,7 +35,7 @@ class QTextBrowserHandler(logging.Handler):
         self.text_browser.append(msg)
 
 # Dual logger setup (console and QTextBrowser)
-def setup_logger(text_browser=None, name='sa_log' , level=logging.DEBUG):
+def setup_logger(text_browser=None, name='sa_log' , level=logging.DEBUG, is_console=True):
     # Root logger
     logger = logging.getLogger(name)
     logger.setLevel(level)
@@ -44,10 +44,11 @@ def setup_logger(text_browser=None, name='sa_log' , level=logging.DEBUG):
     logger.handlers.clear()
 
     # Console Handler (keeps console output)
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(level)
-    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    logger.addHandler(console_handler)
+    if is_console:
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(level)
+        console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        logger.addHandler(console_handler)
 
     # QTextBrowser Handler (if provided)
     if text_browser:
