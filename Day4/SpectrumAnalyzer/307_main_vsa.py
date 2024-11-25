@@ -9,7 +9,6 @@ from PyQt6.QtCore       import QTimer
 from time               import sleep
 
 import numpy as np
-import logging
 
 from utils.pyqt2python import h_gui
 from utils.plot_widget import PlotWidget
@@ -22,43 +21,13 @@ def is_valid_ip(ip:str) -> bool:
     ip_pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
     return re.match(ip_pattern, ip) is not None
 
-# Basic setup for console logging
-def setup_logger(name=None, level=logging.DEBUG):
-    """Configure logging to console with colored output and formatting"""
-
-    # Create logger (or get existing one if name provided)
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-
-    # Clear any existing handlers to avoid duplicate messages
-    logger.handlers = []
-
-    # Create console handler and set level
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(level)
-
-    # Create formatter
-    formatter = logging.Formatter(
-        fmt='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-
-    # Add formatter to handler
-    console_handler.setFormatter(formatter)
-
-    # Add handler to logger
-    logger.addHandler(console_handler)
-
-    return logger
-
-
 # The GUI controller clas inherit from QMainWindow object as defined in the ui file
 class LabDemoVsaControl(QMainWindow):
     def __init__(self):
         super().__init__()
         # Load the UI file into the Class (LabDemoVsaControl) object
         loadUi("BasicVsaControl_3.ui", self)
-        self.log = setup_logger('sa_logger')
+
         self.setWindowTitle("SA Control")
 
         # Interface of the GUI Widgets to the Python code
@@ -91,7 +60,7 @@ class LabDemoVsaControl(QMainWindow):
         try:
             self.h_gui['Load'].callback()  # self.cb_load
         except FileNotFoundError:
-            self.log.warning("No last.yaml file found")
+            print("No last.yaml file found")
 
         self.h_gui['Save'].emit() #  self.cb_save
 
@@ -107,8 +76,6 @@ class LabDemoVsaControl(QMainWindow):
 
     def vsa_write(self, cmd:str):
         if self.vsa is not None:
-            # Add logging to the write command (Debug Level)
-            self.log.debug(f"VSA Write: {cmd}")
             self.vsa.write(cmd)
 
     def vsa_read_trace(self):
@@ -133,20 +100,17 @@ class LabDemoVsaControl(QMainWindow):
     # That is a checkable button
     def cb_connect(self):
         if self.sender().isChecked(): # self.h_gui['Connect'].obj.isChecked():
-            self.log.debug("Connect button Checked")
+            print("Connect button Checked")
             # Open the connection to the signal generator
             try:
                 ip              = self.h_gui['IP'].get_val()
                 self.vsa        = self.rm.open_resource(f"TCPIP0::{ip}::inst0::INSTR")
                 self.vsa.timeout = 5000
-                self.log.info(f"Connected to {ip}")
-                # Read the signal generator status and update the GUI (RF On/Off, Modulation On/Off,Pout and Fc)
+                print(f"Connected to {ip}")
                 # Query the signal generator name
-                self.vsa.write("*IDN?")
-                idn         = self.vsa.read().strip()
                 # <company_name>, <model_number>, <serial_number>,<firmware_revision>
                 # Remove the firmware revision
-                idn         = idn.split(',')[0:3]
+                idn         = self.vsa.query("*IDN?").strip().split(',')[0:3]
                 idn         = ', '.join(idn)
                 self.setWindowTitle(idn)
                 # Reset and clear all status (errors) of the spectrum analyzer
@@ -163,14 +127,13 @@ class LabDemoVsaControl(QMainWindow):
                 self.vsa.write(":INITiate:CONTinuous ON")
 
             except Exception:
-                self.log.error("Connection failed")
                 if self.vsa is not None:
                     self.vsa.close()
                     self.vsa = None
                 # Clear Button state
                 self.h_gui['Connect'].set_val(False, is_callback=True)
         else:
-            self.log.debug("Connect button Cleared")
+            print("Connect button Cleared")
             # Close the connection to the signal generator
             if self.vsa is not None:
                 self.vsa.close()
@@ -182,12 +145,12 @@ class LabDemoVsaControl(QMainWindow):
         ip          = self.h_gui['IP'].get_val()
         # Check if the ip is a valid
         if not is_valid_ip(ip):
-            self.log.error(f"Invalid IP address: {ip}, Resetting to default")
+            print(f"Invalid IP address: {ip}, Resetting to default")
             ip = self.Params["IP"]
             # Set the default value to the GUI object
             self.h_gui['IP'].set_val(ip)
 
-        self.log.debug(f"IP = {ip}")
+        print(f"IP = {ip}")
 
     # Callback function for the Fc lineEdit
     def cb_fc(self):
@@ -195,39 +158,39 @@ class LabDemoVsaControl(QMainWindow):
         try:
             frequency_mhz = self.h_gui['Fc'].get_val()
         except ValueError:
-            self.log.info(f"Invalid Frequency: Resetting to default")
+            print(f"Invalid Frequency: Resetting to default")
             frequency_mhz = self.Params["Fc"]
             # Set the default value to the GUI object
             self.h_gui['Fc'].set_val(frequency_mhz)
 
         self.vsa_write(f"sense:FREQuency:CENTer {frequency_mhz} MHz") # can replace the '} MHz' with '}e6'
-        self.log.debug(f"Fc = {frequency_mhz} MHz")
+        print(f"Fc = {frequency_mhz} MHz")
 
     def cb_rbw(self):
         # Check if the frequency is a valid float number
         try:
             rbw = self.h_gui['RBW'].get_val()
         except ValueError:
-            self.log.info(f"Invalid RBW: Resetting to default")
+            print(f"Invalid RBW: Resetting to default")
             rbw = self.Params["RBW"]
             # Set the default value to the GUI object
             self.h_gui['RBW'].set_val(rbw)
 
         self.vsa_write(f"sense:BANDwidth:RESolution {rbw} MHz")
-        self.log.debug(f"RBW = {rbw} MHz")
+        print(f"RBW = {rbw} MHz")
 
     def cb_span(self):
         # Check if the frequency is a valid float number
         try:
             span = self.h_gui['Span'].get_val()
         except ValueError:
-            self.log.info("Invalid Span: Resetting to default")
+            print(f"Invalid Span: Resetting to default")
             span = self.Params["Span"]
             # Set the default value to the GUI object
             self.h_gui['Span'].set_val(span)
 
         self.vsa_write(f"sense:FREQuency:SPAN {span} MHz")
-        self.log.debug(f"Span = {span} MHz")
+        print(f"Span = {span} MHz")
 
     def cb_trace(self):
         trace_id = self.h_gui['Trace'].get_val()
@@ -283,7 +246,7 @@ class LabDemoVsaControl(QMainWindow):
     def cb_hires_snapshot(self):
         if self.vsa is not None:
             if self.sender().isChecked():
-                self.log.debug("HiResSnapshot button Checked")
+                print("HiResSnapshot button Checked")
                 self.thread = LongProcess(self.vsa)
                 self.thread.progress.connect(self.cb_hires_scan)
                 self.thread.data.connect(self.cb_hi_res_plot)
@@ -291,7 +254,7 @@ class LabDemoVsaControl(QMainWindow):
                 self.timer.stop()
                 self.thread.start() # Start the thread calling the run method
             else:
-                self.log.debug("HiResSnapshot button Cleared")
+                print("HiResSnapshot button Cleared")
                 self.thread.stop()
                 self.thread.wait()
                 self.h_gui['HiResProgress'].set_val(0)
@@ -313,7 +276,7 @@ class LabDemoVsaControl(QMainWindow):
                                title='Hi-Res PSA', xlog=False, clf=True)
 
     def cb_save(self):
-        self.log.debug("Save")
+        print("Save")
         # Read the values from the GUI objects and save them to the Params dictionary
         for key, value in self.Params.items():
             if key in self.h_gui:
@@ -323,12 +286,12 @@ class LabDemoVsaControl(QMainWindow):
             yaml.dump(self.Params, f)
 
     def cb_load(self):
-        self.log.debug("Load")
+        print("Load")
         try:
             with open(self.file_name, "r") as f:
                 self.Params = yaml.safe_load(f)
         except FileNotFoundError:
-            self.log.info(f"File not found: {self.file_name}")
+            print(f"File not found: {self.file_name}")
             raise
 
 
@@ -341,7 +304,7 @@ class LabDemoVsaControl(QMainWindow):
 
 
     def closeEvent(self, event):
-        self.log.debug("Exiting the application")
+        print("Exiting the application")
         # Clean up the resources
         # Close the connection to the signal generator
         if self.vsa is not None:

@@ -111,13 +111,10 @@ class LabDemoVsaControl(QMainWindow):
                 ip           = self.h_gui['IP'].get_val()
                 self.vsa = self.rm.open_resource(f"TCPIP0::{ip}::inst0::INSTR")
                 print(f"Connected to {ip}")
-                # Read the signal generator status and update the GUI (RF On/Off, Modulation On/Off,Pout and Fc)
                 # Query the signal generator name
-                self.vsa.write("*IDN?")
-                idn         = self.vsa.read().strip()
                 # <company_name>, <model_number>, <serial_number>,<firmware_revision>
                 # Remove the firmware revision
-                idn         = idn.split(',')[0:3]
+                idn         = self.vsa.query("*IDN?").strip().split(',')[0:3]
                 idn         = ', '.join(idn)
                 self.setWindowTitle(idn)
                 # Aligned the spectrum analyzer to the GUI values
@@ -132,7 +129,7 @@ class LabDemoVsaControl(QMainWindow):
                     self.vsa.close()
                     self.vsa = None
                 # Clear Button state
-                self.sender().setChecked(False)
+                self.h_gui['Connect'].set_val(False, is_callback=True)
         else:
             print("Connect button Cleared")
             # Close the connection to the signal generator

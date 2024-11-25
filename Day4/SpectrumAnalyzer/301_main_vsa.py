@@ -28,6 +28,7 @@ class LabDemoVsaControl(QMainWindow):
             IP                  = h_gui(self.lineEdit_4         , self.cb_ip                ),
             Fc                  = h_gui(self.lineEdit           , self.cb_fc                ),
             Save                = h_gui(self.actionSave         , self.cb_save              ),
+            Save                = h_gui(self.actionSave         , self.cb_save              ),
             Load                = h_gui(self.actionLoad         , self.cb_load              ))
 
         # Create a Resource Manager object
@@ -63,25 +64,18 @@ class LabDemoVsaControl(QMainWindow):
                 ip           = self.h_gui['IP'].get_val()
                 self.vsa = self.rm.open_resource(f"TCPIP0::{ip}::inst0::INSTR")
                 print(f"Connected to {ip}")
-                # Read the signal generator status and update the GUI (RF On/Off, Modulation On/Off,Pout and Fc)
                 # Query the signal generator name
-                self.vsa.write("*IDN?")
-                idn         = self.vsa.read().strip()
                 # <company_name>, <model_number>, <serial_number>,<firmware_revision>
                 # Remove the firmware revision
-                idn         = idn.split(',')[0:3]
+                idn         = self.vsa.query("*IDN?").strip().split(',')[0:3]
                 idn         = ', '.join(idn)
                 self.setWindowTitle(idn)
-                # Query the RF Output state
-
-                # Update the GUI (no callbacks)
-
             except Exception:
                 if self.vsa is not None:
                     self.vsa.close()
                     self.vsa = None
                 # Clear Button state
-                self.sender().setChecked(False)
+                self.h_gui['Connect'].set_val(False, is_callback=True)
         else:
             print("Connect button Cleared")
             # Close the connection to the signal generator
