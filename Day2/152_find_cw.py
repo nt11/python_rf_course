@@ -1,21 +1,8 @@
-import sys
-import pyvisa
-import time
-from time import time # to avoid time.time in code
-import numpy as np
+import  sys
+import  pyvisa
+import  time
+import  numpy as np
 
-def set_defaults(sa):
-    # Reset and clear all status (errors) of the spectrum analyzer
-    sa.write("*RST")
-    sa.write("*CLS")
-    # Set auto resolution bandwidth
-    sa.write("sense:BANDwidth:RESolution:AUTO ON")
-    # Set the trace to max hold
-    sa.write(":TRACe1:TYPE WRITe")
-    # Set the detector to positive peak
-    sa.write("sense:DETEctor POSitive")
-    # Set the sweep mode to single sweep
-    sa.write("INITiate:CONTinuous OFF")
 
 def wait_for_sweep(sa, timeout_seconds=10):
     """
@@ -42,8 +29,8 @@ def wait_for_sweep(sa, timeout_seconds=10):
     sa.write(":INIT:IMM")
     sa.write("*WAI")
 
-    start_time = time()
-    while (time() - start_time) < timeout_seconds:
+    start_time = time.perf_counter()
+    while (time.perf_counter() - start_time) < timeout_seconds:
         # Query the Operation Event Register
         status = int(sa.query(":STAT:OPER:EVEN?").strip())
 
@@ -73,7 +60,7 @@ if __name__ == "__main__":
     # Connect to the instrument
     try:
         rm = pyvisa.ResourceManager('@py')
-        ip = '10.0.0.14'
+        ip = '10.0.0.16'
         sa = rm.open_resource(f'TCPIP0::{ip}::inst0::INSTR')
 
         # Query the signal generator name
@@ -91,7 +78,17 @@ if __name__ == "__main__":
 
     # Set the spectrum analyzer to maximal span
     sa.write("sense:FREQuency:SPAN:FULL")
-    set_defaults(sa)
+    # Reset and clear all status (errors) of the spectrum analyzer
+    sa.write("*RST")
+    sa.write("*CLS")
+    # Set auto resolution bandwidth
+    sa.write("sense:BANDwidth:RESolution:AUTO ON")
+    # Set the trace to max hold
+    sa.write(":TRACe1:TYPE WRITe")
+    # Set the detector to positive peak
+    sa.write("sense:DETEctor POSitive")
+    # Set the sweep mode to single sweep
+    sa.write("INITiate:CONTinuous OFF")
 
     # Wait for the sweep to complete
     if not wait_for_sweep(sa):
