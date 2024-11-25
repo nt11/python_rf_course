@@ -13,7 +13,7 @@ import numpy as np
 from utils.pyqt2python import h_gui
 from utils.plot_widget import PlotWidget
 
-from o257_long_process import LongProcess
+from o310_long_process import LongProcess
 
 
 def is_valid_ip(ip:str) -> bool:
