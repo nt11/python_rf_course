@@ -104,6 +104,9 @@ class h_gui:
             return self.obj.isChecked()
         elif isinstance(self.obj, (QSlider, QSpinBox, QDoubleSpinBox,QDial, QProgressBar)):
             return self.obj.value()
+        elif isinstance(self.obj, QPushButton):
+            if self.obj.isCheckable():
+                return self.obj.isChecked()
         else: #  isinstance(self.obj, QLineEdit):
             if self.val_type is None:
                 return self.obj.text()
