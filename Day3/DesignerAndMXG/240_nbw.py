@@ -79,7 +79,7 @@ def xrandn_bw(Fs: float, BW: float, N: int = 1000)->Tuple[np.ndarray, np.ndarray
     # Interpolate the symbols by I by using the raised cosine filter
     # Design the raised cosine filter
     # Generate the raised cosine filter
-    rc_filter   = rcosdesign(beta:=0.125, span:=30, sps:=int(I), shape='normal')
+    rc_filter   = rcosdesign(beta:=0.125, span:=20, sps:=int(I), shape='normal')
 
     # Interpolate (QPSK) symbols using the raised cosine filter
     sym_cyc     = np.concatenate((sym_in[-span*10-1:-1], sym_in, sym_in[0:span*10]))
@@ -88,7 +88,7 @@ def xrandn_bw(Fs: float, BW: float, N: int = 1000)->Tuple[np.ndarray, np.ndarray
     # Resample the signal to the desired sampling frequency
     if Fs/BW != I:
         #y = mp.resample(y, Fs/BW, I,N=45, window=('blackmanharris',))
-        y = mp.resample(y, Fs / BW, I)
+        y = mp.resample(y, Fs / BW, I, N=20)
 
     ii = (len(y) - output_len)//2
     y  = y[ii: ii + output_len]
@@ -99,13 +99,12 @@ def xrandn_bw(Fs: float, BW: float, N: int = 1000)->Tuple[np.ndarray, np.ndarray
 # Test the function
 if __name__ == '__main__':
     # MATLAB Like behavior.
-    mp.matlab_like()
-    #import matplotlib
-    #matplotlib.use('TkAgg')
-    #plt.ion()
+    import matplotlib
+    matplotlib.use('TkAgg')
+    plt.ion()
 
     Fs      = 20 # Hz
-    BW      = 3.33  # Hz
+    BW      = 3.22  # Hz
     N       = 5000
     y       = xrandn_bw(Fs, BW, N)
     mp.psa(np.tile(y,10), Fs, 0.1, PLOT = True)
