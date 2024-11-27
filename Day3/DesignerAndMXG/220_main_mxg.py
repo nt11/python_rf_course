@@ -2,6 +2,7 @@ import re
 import sys
 
 import pyvisa
+import pyvisa_py
 import pyarbtools as arb
 import yaml
 from PyQt6.QtWidgets import QApplication, QMainWindow
