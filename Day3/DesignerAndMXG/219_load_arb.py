@@ -1,11 +1,5 @@
 # Loading the VSG ARB module with a custom waveform
-# using pyarbtools. Define a loading function
-
-import matplotlib
-# Import the necessary libraries
 import pyarbtools as arb
-
-matplotlib.use('TkAgg')
 
 # Test the function
 if __name__ == '__main__':
@@ -24,7 +18,7 @@ if __name__ == '__main__':
 
     sigarb.set_cf(1e9)
     sigarb.set_fs(Fs)
-    sigarb.set_alcState(False)
+    sigarb.set_alcState(0)
 
     sigarb.play(name)
 
