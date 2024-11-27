@@ -99,7 +99,6 @@ class LabDemoVsaControl(QMainWindow):
         # Create a Resource Manager object
         self.rm         = pyvisa.ResourceManager('@py')
         self.vsa        = None
-        self.vsa_arb    = None
 
         # Load the configuration/default values from the YAML file
         self.Params     = None
