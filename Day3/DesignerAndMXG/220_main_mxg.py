@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.uic import loadUi
 
 from   python_rf_course.utils.pyqt2python import h_gui
-from   python_rf_course.utils.mutitone import mutitone
+from   python_rf_course.utils.multitone import multitone
 
 def is_valid_ip(ip:str) -> bool:
     # Regular expression pattern for matching IP address
@@ -231,8 +231,8 @@ class LabDemoMxgControl(QMainWindow):
         print(f"MultiTone Bandwidth = {self.h_gui['MultiToneBw'].get_val()} MHz")
         print(f"MultiTone Number of Tones = {self.h_gui['MultiToneNtones'].get_val()}")
         if self.arb_gen is not None:
-            sig = mutitone(BW=self.h_gui['MultiToneBw'].get_val(), Ntones=self.h_gui['MultiToneNtones'].get_val(),
-                           Fs=self.Params['ArbNaxFs'], Nfft=2048)
+            sig = multitone(BW=self.h_gui['MultiToneBw'].get_val(), Ntones=self.h_gui['MultiToneNtones'].get_val(),
+                            Fs=self.Params['ArbNaxFs'], Nfft=2048)
             self.arb_gen.download_wfm(sig[0], wfmID='RfLabMultiTone')
             self.arb_gen.play('RfLabMultiTone')
 

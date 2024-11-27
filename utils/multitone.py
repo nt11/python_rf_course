@@ -6,7 +6,7 @@
 from typing import Tuple
 import numpy as np
 
-def mutitone(BW: float, Ntones: int, Fs: float, Nfft: int = 4096)->Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def multitone(BW: float, Ntones: int, Fs: float, Nfft: int = 4096,DEBUG = False)->Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
     Design a multi-tone signal in the frequency domain and return the time domain signal.
     Flat amplitude symmetrical around DC.
@@ -32,8 +32,11 @@ def mutitone(BW: float, Ntones: int, Fs: float, Nfft: int = 4096)->Tuple[np.ndar
         X[bin_index] = A[i] * np.exp(1j * phi[i])
     # Generate the time domain signal
     x = np.fft.ifft(np.fft.ifftshift(X))
-    F = -Fs / 2 + Fs / Nfft * np.arange(Nfft)
-    return x / np.max(np.abs(x)) , X , F
+    if DEBUG:
+        F = -Fs / 2 + Fs / Nfft * np.arange(Nfft)
+        return x / np.max(np.abs(x)) , X , F
+    else:
+        return x / np.max(np.abs(x))
 
 # Test the function
 if __name__ == '__main__':
@@ -42,7 +45,7 @@ if __name__ == '__main__':
     Ntones  = 5
     Fs      = 20 # MHz
 
-    x, X, F = mutitone(BW, Ntones, Fs)
+    x, X, F = multitone(BW, Ntones, Fs, DEBUG=True)
 
     plt.figure()
     plt.plot(F, np.abs(X))
