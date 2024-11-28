@@ -2,6 +2,8 @@ import re
 import sys
 
 import  pyvisa
+import  pyvisa_py
+
 import  yaml
 from    PyQt6.QtWidgets    import QApplication, QMainWindow, QVBoxLayout, QTextBrowser
 from    PyQt6.uic          import loadUi
@@ -12,8 +14,8 @@ from    time               import sleep
 import numpy as np
 import logging
 
-from utils.pyqt2python import h_gui
-from utils.plot_widget import PlotWidget
+from python_rf_course.utils.pyqt2python import h_gui
+from python_rf_course.utils.plot_widget import PlotWidget
 
 from o310_long_process import LongProcess
 
