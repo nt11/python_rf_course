@@ -3,12 +3,18 @@ import sys
 
 import pyvisa
 # EX4: Add pyarbtools, name it arb. (slide 3-51 example 219)
+import pyarbtools as arb
+
 
 import yaml
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.uic import loadUi
 
+
 # EX4: import h_gui and multitone from the course repository (slide 2-7)
+from utils.pyqt2python import h_gui
+from utils import multitone
+
 
 # EX4: the base directory for the course is python_rf_course (from python_rf_course. ... import ...)
 
@@ -23,7 +29,7 @@ class LabDemoMxgControl(QMainWindow):
         super().__init__()
         # Load the UI file into the Class (LabDemoMxgControl) object
         # EX4: Change the file name to your new ui file
-        loadUi("BasicMxgControl.ui", self)
+        loadUi("My_BasicMxgControl.ui", self)
 
         self.setWindowTitle("MXG Control")
 
@@ -36,7 +42,16 @@ class LabDemoMxgControl(QMainWindow):
             Fc                  = h_gui(self.lineEdit_2         , self.cb_fc                ),
             Pout                = h_gui(self.horizontalSlider   , self.cb_pout_slider       ),
             Save                = h_gui(self.actionSave         , self.cb_save              ),
-            Load                = h_gui(self.actionLoad         , self.cb_load              ))
+            Load                = h_gui(self.actionLoad         , self.cb_load              ),
+
+            Multi_Tone_On_Off   =h_gui(self.pushButton_4        , self.cb_multitone_on_off  ),
+            BW                  = h_gui(self.doubleSpinBox      , self.cb_multitone_update  ),
+            N_Tones             = h_gui(self.dial               , self.cb_multitone_update  ),
+
+
+        )
+
+
         # EX4: Add the new widgets to the h_gui dictionary use the following callbacks:
         # EX4:  cb_multitone_update (use the same callback for the BW and the Ntones)
         # EX4:  cb_multitone_on_off (slide 3-45 example 210)
@@ -44,8 +59,10 @@ class LabDemoMxgControl(QMainWindow):
         # Create a Resource Manager object
         self.rm         = pyvisa.ResourceManager('@py') # EX4: make sure - '@py' is for the PyVISA-py backend
         self.sig_gen    = None
-        # EX4: define similarly arb_gen
 
+
+        # EX4: define similarly arb_gen
+        self.arb_gen    =None
 
         # Load the configuration/default values from the YAML file
         self.Params     = None
