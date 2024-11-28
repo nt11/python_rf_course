@@ -11,9 +11,11 @@ class LongProcess(QThread):
     def __init__(self, vsa):
         super().__init__()
         self.vsa = vsa
+        self.running = False
 
     def run(self):
         # Save the instrument attributes for recall at the end of the scan
+        self.running = True
         self.vsa.write("*SAV 1")
         # Hi-Res scan of the spectrum analyzer
         fc              = float(self.vsa.query(':sens:FREQ:CENT?').strip())*1e-6  # MHz Center Frequency
@@ -76,16 +78,18 @@ class LongProcess(QThread):
             all_freq = np.concatenate([all_freq, f           ])
             # Update the progress bar
             self.progress.emit(100 * (i + 1) // len(Fscan))
+            if not self.running:
+                break
 
         # Recall the instrument settings
         self.vsa.write("*RCL 1")
         # Set continuous sweep mode
         self.vsa.write("INITiate:CONTinuous ON")
-
-        # Emit the data signal
-        self.data.emit(all_freq , all_data)
+        if self.running:
+            # Emit the data signal
+            self.data.emit(all_freq , all_data)
 
 
     def stop(self):
-        pass
+        self.running = False
 
