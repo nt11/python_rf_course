@@ -236,7 +236,7 @@ class LabDemoMxgControl(QMainWindow):
         if self.arb_gen is not None:
             sig = multitone(BW=self.h_gui['MultiToneBw'].get_val(), Ntones=self.h_gui['MultiToneNtones'].get_val(),
                             Fs=self.Params['ArbNaxFs'], Nfft=2048)
-            self.arb_gen.download_wfm(sig[0], wfmID='RfLabMultiTone')
+            self.arb_gen.download_wfm(sig, wfmID='RfLabMultiTone')
             self.arb_gen.play('RfLabMultiTone')
 
     def closeEvent(self, event):

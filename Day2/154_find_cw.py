@@ -1,6 +1,6 @@
 import  sys
 import  pyvisa
-import pyvisa_py
+import  pyvisa_py
 import  time
 import  numpy as np
 
