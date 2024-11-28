@@ -12,7 +12,6 @@ from    PyQt6.QtCore       import QTimer
 from    time               import sleep
 
 import numpy as np
-import logging
 
 from python_rf_course.utils.pyqt2python     import h_gui
 from python_rf_course.utils.plot_widget     import PlotWidget
