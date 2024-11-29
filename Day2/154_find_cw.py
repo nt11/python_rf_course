@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # Connect to the instrument
     try:
         rm = pyvisa.ResourceManager('@py')
-        ip = '10.0.0.16'
+        ip = '10.0.0.19'
         sa = rm.open_resource(f'TCPIP0::{ip}::inst0::INSTR')
         # Query the signal generator name
         # <company_name>, <model_number>, <serial_number>,<firmware_revision>
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # Start the sweep
     sa.write("INITiate:IMMediate")
     # Wait for the sweep to complete
-    sa.write("*OPC?")
+    sa.query("*OPC?")
     # Read the maximum peak (frequency and power)
     Fc, p = read_max_peak(sa)
 
@@ -62,7 +62,7 @@ if __name__ == "__main__":
         sa.write(f"sense:FREQuency:SPAN {span} MHz")
         sa.write("INITiate:IMMediate")
         # Wait for the sweep to complete
-        sa.write("*OPC?")
+        sa.query("*OPC?")
         Fc, p = read_max_peak(sa)
         print(f'Center Frequency: {Fc} MHz, Span: {span} MHz, Peak: {p} dBm')
 

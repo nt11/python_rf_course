@@ -34,7 +34,7 @@ class LongProcess(QThread):
         self.vsa.write("INITiate:CONTinuous OFF"            )
         self.vsa.write("INITiate:IMMediate"                 )
         # Wait for the sweep to complete
-        self.vsa.write("*OPC?")
+        self.vsa.query("*OPC?")
         # Read the trace data
         # Query the instrument for the trace data
         trace_data  = self.vsa.query_ascii_values(':TRAC? TRACE1', container=np.array)

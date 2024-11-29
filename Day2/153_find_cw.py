@@ -84,7 +84,7 @@ if __name__ == "__main__":
     sa.write("INITiate:CONTinuous OFF")
     sa.write("INITiate:IMMediate")
     # Wait for the sweep to complete
-    sa.write("*OPC?")
+    sa.query("*OPC?")
     Fc, p = read_max_peak(sa)
 
     # Set the refrence level to the maximum
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         sa.write(f"sense:FREQuency:SPAN {span} MHz")
         sa.write("INITiate:IMMediate")
         # Wait for the sweep to complete
-        sa.write("*OPC?")
+        sa.query("*OPC?")
         Fc, p = read_max_peak(sa)
         print(f'Center Frequency: {Fc} MHz, Span: {span} MHz, Peak: {p} dBm')
 
