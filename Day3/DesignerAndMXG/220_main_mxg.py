@@ -79,13 +79,12 @@ class LabDemoMxgControl(QMainWindow):
                 print(f"Connected to {ip}")
                 # Read the signal generator status and update the GUI (RF On/Off, Modulation On/Off,Pout and Fc)
                 # Query the signal generator name
-                self.sig_gen.write("*IDN?")
-                idn         = self.sig_gen.read().strip()
                 # <company_name>, <model_number>, <serial_number>,<firmware_revision>
                 # Remove the firmware revision
-                idn         = idn.split(',')[0:3]
-                idn         = ', '.join(idn)
+                idn         = self.sig_gen.query("*IDN?").strip().split(',')[0:3]
+                idn         = ','.join(idn)
                 self.setWindowTitle(idn)
+                self.sig_gen.write("*CLS")
                 # Query RF On/Off mode
                 self.sig_gen.write(":OUTPUT:STATE?")
                 rf_state    = bool(int(self.sig_gen.read().strip()))
