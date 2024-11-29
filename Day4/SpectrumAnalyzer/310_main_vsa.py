@@ -12,6 +12,7 @@ from    PyQt6.QtCore       import QTimer
 from    time               import sleep
 
 import numpy as np
+import logging # for pyinstaller
 
 from python_rf_course.utils.pyqt2python     import h_gui
 from python_rf_course.utils.plot_widget     import PlotWidget
@@ -42,7 +43,7 @@ class LabDemoVsaControl(QMainWindow):
         # Load the UI file into the Class (LabDemoVsaControl) object
         loadUi("BasicVsaControl_4.ui", self)
         # Create Logger
-        self.log = setup_logger(text_browser=self.textBrowser,name='sa_log', level=logging.DEBUG)
+        self.log = setup_logger(text_browser=self.textBrowser,name='sa_log', level=logging.INFO,is_console=True)
         logging.getLogger('sa_log').propagate = True
         #suppress_external_logging()
 
