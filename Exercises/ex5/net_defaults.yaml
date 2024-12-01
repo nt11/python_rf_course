@@ -1,0 +1,7 @@
+IP_SG    : 10.0.0.25  # IP address of the signal generator
+IP_SA    : 10.0.0.26  # IP address of the spectrum analyzer
+Fstart   : 850.0      # MHz float
+Fstop    : 950.0      # MHz float
+Npoints  : 1024       # int
+Pout:     -30         # dBm int
+
