@@ -1,6 +1,7 @@
 import logging
 import sys
 import pyvisa
+import pyvisa_py
 
 class SCPIWrapper:
     def __init__(self, instr , log, name = 'SA'):
