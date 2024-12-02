@@ -2,7 +2,7 @@ import re
 import sys
 
 import pyvisa
-# EX4: Add pyarbtools, name it arb. (slide 3-51 example 219)
+# EX4: Add pyarbtools, name it arb. (slide 3-51 example 219) bla bla
 import pyarbtools as arb
 
 
