@@ -57,7 +57,7 @@ class LongProcess(QThread):
             set_level  = float(self.scpi_sa.query(f"DISP:WIND:TRAC:Y:RLEV?").strip() )
             if set_level != max_level:
                 self.log.emit(f"Thread: Setting reference level to {max_level}")
-            self.scpi_sa.write(f"DISP:WIND:TRAC:Y:RLEV {max_level}")
+                self.scpi_sa.write(f"DISP:WIND:TRAC:Y:RLEV {max_level}")
             # save the peak value and frequency
             power = np.append(power, peak_value)
             freq  = np.append(freq, f)
