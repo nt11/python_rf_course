@@ -1,6 +1,6 @@
 import pyvisa
 
-
+print("start")
 if __name__ == '__main__':
     print("Results")
     print("-------")
@@ -8,7 +8,7 @@ if __name__ == '__main__':
 
     try:
         # Connect to instrument
-        instr = rm.open_resource('TCPIP::10.0.0.7::INSTR')
+        instr = rm.open_resource('TCPIP::192.168.1.200::INSTR')
         instr.timeout = 5000
 
         # Basic IEEE-488.2 commands
