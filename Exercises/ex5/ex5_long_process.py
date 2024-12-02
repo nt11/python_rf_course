@@ -43,7 +43,11 @@ class LongProcess(QThread):
             self.sa.write(f"sense:FREQuency:SPAN 5 MHz")
             # Initiate a single sweep
             self.sa.write("INITiate:IMMediate")
-            self.sa.query("*OPC?")
+            try:
+                self.sa.query("*OPC?")
+            except pyvisa.errors.VisaIOError:
+                self.log.emit(f"Thread: OPC Failed at {f} MHz")
+
             # Set marker to peak
             self.sa.write("CALCulate:MARKer:MAXimum")
             # Get the peak value
