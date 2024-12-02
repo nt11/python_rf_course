@@ -3,10 +3,14 @@ import numpy as np
 
 
 class LongProcess(QThread):
-    # Define signals as class attributes (for progressbar and returned data)
-    progress    = pyqtSignal(int)
-    data        = pyqtSignal(np.ndarray, np.ndarray)
-    log         = pyqtSignal(str)
+    #EX5_thread_1:  Define signals as class attributes (slide 4-27 example o310)
+    #Define the following signals:
+    # progress (sends an integer)
+    # data (sends two numpy arrays - np.ndarray)
+    # log (sends a string)
+    #
+    #
+    #
 
     def __init__(self, f_scan,scpi_sa, scpi_sg):
         super().__init__()
@@ -19,14 +23,15 @@ class LongProcess(QThread):
     def run(self):
         # Save the instrument attributes for recall at the end of the scan
         self.running = True
-        self.log.emit("Thread: Starting scan")
+        #EX5_2: Send a log message that you are starting the scan (Start with the word "Thread:")
+        #
 
         # Set RF output on
         self.scpi_sg.write(":OUTPUT:STATE ON")
         self.scpi_sg.write(":OUTPUT:MOD:STATE OFF")
-        # set the RBW
-        self.scpi_sa.write("sense:BANDwidth:RESolution 0.1 MHz")
-        self.scpi_sa.write("sense:DETEctor AVERage")
+        #EX5_thread3: Set the SA RBW to 0.1 MHz and the detector to average using the SCPI wrapper(slide 2-55)
+        #
+        #
         # Trace Clear/write mode
         self.scpi_sa.write("TRACe:MODE WRITe")
         self.scpi_sa.write("INITiate:CONTinuous OFF")
@@ -48,10 +53,11 @@ class LongProcess(QThread):
             except pyvisa.errors.VisaIOError:
                 self.log.emit(f"Thread: OPC Failed at {f} MHz")
 
-            # Set marker to peak
-            self.scpi_sa.write("CALCulate:MARKer:MAXimum")
-            # Get the peak value
-            peak_value = float(self.scpi_sa.query("CALCulate:MARKer:Y?").strip())
+            #EX5_thread4: Set marker to peak - Use SCPI Wrapper, use SCPI commands from the auxiliary sheet
+            #
+            #EX5_thread5: Get the peak_value by quering the SCPI Wrapper. Use SCPI commands from the auxiliary sheet
+            #Remember to strip the output and cast to float
+            #peak_value =
             # Set the reference level
             max_level  = np.ceil( peak_value/10 + 1)*10
             set_level  = float(self.scpi_sa.query(f"DISP:WIND:TRAC:Y:RLEV?").strip() )
@@ -62,16 +68,18 @@ class LongProcess(QThread):
             power = np.append(power, peak_value)
             freq  = np.append(freq, f)
 
-            if i%20==0:
-                self.data.emit(freq, power)
+            #EX5_thread4: Emit the frequency and power every 20 iterations (slide 4-27, example o310)
+            #
+            #
 
-            # Update the progress bar
-            self.progress.emit(100 * (i + 1) // len(self.f_scan))
+            #EX5_thread5: Emit the progress signal (slide 4-27, example o310) - scale the progress to a maximum of 100
+            #
+
             if not self.running:
                 break
 
-        # Emit the data signal
-        self.data.emit(freq, power)
+        #EX5_thread6: Emit the final freq,power  (slide 4-27, example o310)
+        #
 
 
     def stop(self):
