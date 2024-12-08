@@ -11,7 +11,8 @@ from python_rf_course.utils.plot_widget     import PlotWidget
 from python_rf_course.utils.logging_widget  import setup_logger
 from python_rf_course.utils.SCPI_wrapper    import *
 
-from ex5_long_process import LongProcess
+#EX5_1: Import the thread class form the ex5_long_process_skeleton_lite.py file
+#
 
 
 def is_valid_ip(ip:str) -> bool:
@@ -27,7 +28,8 @@ class LabNetworkControl(QMainWindow):
         # Load the UI file into the Class (LabDemoVsaControl) object
         loadUi("network.ui", self)
         # Create Logger
-        self.log = setup_logger(text_browser=self.textBrowser,name='net_log', level=logging.DEBUG,is_console=True)
+        # EX5_2: Create a logger object calling setup_logger with the name 'net_log' and set the level to DEBUG (Slide 4-30, example 310)
+        #
         logging.getLogger('net_log').propagate = True
         self.scpi = None
 
@@ -37,7 +39,7 @@ class LabNetworkControl(QMainWindow):
         self.h_gui = dict(
             Connect             = h_gui(self.pushButton         , self.cb_connect           ),
             Go                  = h_gui(self.pushButton_2       , self.cb_go                ),
-            GoProgress          = h_gui(self.progressBar        , None              ),
+            GoProgress          = h_gui(self.progressBar        , None                      ),
             IP_SG               = h_gui(self.lineEdit           , self.cb_ip_sg             ),
             IP_SA               = h_gui(self.lineEdit_2         , self.cb_ip_sa             ),
             Fstart              = h_gui(self.lineEdit_3         , self.cb_scan              ),
@@ -64,12 +66,12 @@ class LabNetworkControl(QMainWindow):
 
         self.h_gui['Save'].emit() #  self.cb_save
 
-        # Create a widget for the Spectrum Analyzer plot
-        self.plot_sa        = PlotWidget()
-        layout              = QVBoxLayout(self.widget)
-        layout.addWidget(self.plot_sa)
+        #EX5_3: Create a widget for the Spectrum Analyzer plot and add it to the layout (slide 4-21, example 310)
+        #
+        #
+        #
 
-        # Iinitilize the freq and power arrays to empty
+        # Initialize the freq and power arrays to empty
         self.f_scan = np.array([])
         self.thread = None
 
@@ -86,8 +88,11 @@ class LabNetworkControl(QMainWindow):
                 self.sg        = self.rm.open_resource(f"TCPIP0::{ip_sg}::inst0::INSTR")
                 self.sa.timeout = 5000
                 self.sg.timeout = 5000
-                self.scpi_sa    = SCPIWrapper(instr=self.sa, log= self.log, name='SA')
-                self.scpi_sg    = SCPIWrapper(instr=self.sg, log= self.log, name='SG')
+                #EX5_4: Create the SCPIWrapper objects for the Spectrum Analyzer and Signal Generator
+                # call them self.scpi_sa and self.scpi_sg. To understand how to do this, go and read the file that is imported as
+                # SCPI_wrapper.py in utils
+                #
+                #
 
                 self.log.info(f"Connected to {ip_sa=} and {ip_sg=}")
                 # Read the signal generator status and update the GUI (RF On/Off, Modulation On/Off,Pout and Fc)
@@ -149,7 +154,8 @@ class LabNetworkControl(QMainWindow):
 
     # thread callback functions
     def tcb_progress(self, i):
-        self.h_gui['GoProgress'].set_val(i)
+        #Ex5_9: Set the progress bar value to i- The name in h_gui is GoProgress
+        #
 
     # thread callback functions
     def tcb_plot(self, freq, power):
@@ -167,18 +173,28 @@ class LabNetworkControl(QMainWindow):
                                       self.h_gui['Fstop'  ].get_val(),
                                       self.h_gui['Npoints'].get_val())
             # Set the signal generator to output power (self.Params["Pout"]))
-            self.scpi_sg.write(f":OUTP:STAT OFF")
-            self.scpi_sg.write(f":POW:LEV {self.Params['Pout']} dBm")
+            self.scpi_sg.write(f":OUTP:STATe OFF")
+            # Ex5_5: Set the signal generator to output power. Use the self.Params['Pout'] value to set the SG power using
+            # the SCPI wrapper object
+            #
+
             # initialize the freq and power arrays to empty
             self.freq = np.array([])
             self.power = np.array([])
-            # Create the thread object
-            self.thread = LongProcess(f_scan=self.f_scan, scpi_sa=self.scpi_sa,scpi_sg=self.scpi_sg) # Create the thread object
-            self.thread.progress.connect(self.tcb_progress)
-            self.thread.data.connect(self.tcb_plot)
-            self.thread.log.connect(        self.log.info      )
+            #EX5_6: Instatiate the thread object, call it self.thread. To understand how to do this, go to the file containing
+            # LongProcess class and read the class and comments
+            #
 
-            self.thread.start() # Start the thread calling the run method
+            #EX5_7: Connect the signals of the thread object to the callback functions. Slide 4-27 (example 310)
+            # Connect progress to the callback tcb_progress
+            # Connect data to the callback tcb_plot
+            # Connect log to the log.info function
+            #
+            #
+            #
+
+            #EX5_8: Start the thread object. Slide 4-26 (example 310)
+            #
 
 
     def cb_save(self):
