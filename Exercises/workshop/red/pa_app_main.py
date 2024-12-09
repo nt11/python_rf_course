@@ -1,11 +1,5 @@
-import re
-
-import  yaml
-from    PyQt6.QtWidgets    import QApplication, QMainWindow, QVBoxLayout
-from    PyQt6.uic          import loadUi
-from    PyQt6.QtCore       import QTimer
-
-import numpy as np
+# WSR_1 Import everything you need
+#
 
 from python_rf_course.utils.pyqt2python     import h_gui
 from python_rf_course.utils.plot_widget     import PlotWidget
@@ -13,14 +7,10 @@ from python_rf_course.utils.logging_widget  import setup_logger
 from python_rf_course.utils.SCPI_wrapper    import *
 from python_rf_course.utils.multitone       import multitone
 
-from pa_app_thread import PaScan
+# WSR_2 Import the worker thread class
+#
 
-import pyvisa
-import pyvisa_py
-import pyarbtools as arb
 
-import logging
-import time
 
 def is_valid_ip(ip:str) -> bool:
     # Regular expression pattern for matching IP address
@@ -29,13 +19,13 @@ def is_valid_ip(ip:str) -> bool:
 
 
 # The GUI controller clas inherit from QMainWindow object as defined in the ui file
-class LabNetworkControl(QMainWindow):
+class PA_App(QMainWindow):
     def __init__(self):
         super().__init__()
         # Load the UI file into the Class (LabDemoVsaControl) object
         loadUi("pa_app.ui", self)
-        # Create Logger
-        self.log = setup_logger(text_browser=self.textBrowser,name='pa_log', level=logging.INFO,is_console=True)
+        #WSR_3: Set up the logger for the application (slide 4-30, example 310)
+        #self.log = ...
         logging.getLogger('pa_log').propagate = True
         self.scpi = None
 
@@ -45,22 +35,23 @@ class LabNetworkControl(QMainWindow):
         self.h_gui = dict(
             Connect             = h_gui(self.pushButton         , self.cb_connect           ),
             TestPa              = h_gui(self.pushButton_2       , self.cb_testpa            ),
-            TestPaProgress      = h_gui(self.progressBar        , None              ),
+            TestPaProgress      = h_gui(self.progressBar        , None                      ),
             IP_SG               = h_gui(self.lineEdit           , self.cb_ip_sg             ),
             IP_SA               = h_gui(self.lineEdit_2         , self.cb_ip_sa             ),
-            Ptx                 = h_gui(self.dial               , self.cb_ptx              ),
+            Ptx                 = h_gui(self.dial               , self.cb_ptx               ),
             Fstart              = h_gui(self.lineEdit_3         , self.cb_scan              ),
             Fstop               = h_gui(self.lineEdit_4         , self.cb_scan              ),
             Npoints             = h_gui(self.lineEdit_5         , self.cb_scan              ),
-            ScanG               = h_gui(self.lcdNumber          , None              ),
-            ScanOP1dB           = h_gui(self.lcdNumber_2        , None              ),
-            ScanOIP3            = h_gui(self.lcdNumber_3        , None              ),
-            ScanOIP5            = h_gui(self.lcdNumber_4        , None              ),
+            ScanG               = h_gui(self.lcdNumber          , None                      ),
+            ScanOP1dB           = h_gui(self.lcdNumber_2        , None                      ),
+            ScanOIP3            = h_gui(self.lcdNumber_3        , None                      ),
+            ScanOIP5            = h_gui(self.lcdNumber_4        , None                      ),
             Save                = h_gui(self.actionSave         , self.cb_save              ),
             Load                = h_gui(self.actionLoad         , self.cb_load              ))
 
         # Create a Resource Manager object
-        self.rm         = pyvisa.ResourceManager('@py')
+        #WSR_4: Create the Resource Manager object (slide 2-54, example 109)
+        #self.rm         = ...
         self.sa         = None
         self.sg         = None
         self.arb        = None
@@ -80,11 +71,12 @@ class LabNetworkControl(QMainWindow):
         self.h_gui['Ptx'].set_val(self.h_gui['Ptx'].get_val()) #  Update the signal (event)
 
         # Create a widget for the Spectrum Analyzer plot
-        self.plot_sa        = PlotWidget()
-        layout              = QVBoxLayout(self.widget)
-        layout.addWidget(self.plot_sa)
+        #WSR_5: Create a widget for the Spectrum Analyzer plot (slide 4-23, example 310)
+        #self.plot_sa        = ...
+        #
+        #
 
-        # Iinitilize the freq and power arrays to empty
+        # Initilize the freq and power arrays to empty
         self.f_scan = np.array([])
         self.Fspan  = None
         self.thread = None
@@ -102,15 +94,23 @@ class LabNetworkControl(QMainWindow):
             self.log.info("Connect button Checked")
             # Open the connection to the signal generator
             try:
-                ip_sa          = self.h_gui['IP_SA'].get_val()
-                ip_sg          = self.h_gui['IP_SG'].get_val()
-                self.sa        = self.rm.open_resource(f"TCPIP0::{ip_sa}::inst0::INSTR")
-                self.sg        = self.rm.open_resource(f"TCPIP0::{ip_sg}::inst0::INSTR")
-                self.arb       = arb.instruments.VSG(ip_sg, timeout=5)
+                #WSR_6: Obtain the IP values from the GUI
+                #ip_sa          = ...
+                #ip_sg          = ...
+
+                #WSR_7: Open the resources for the spectrum analyzer and signal generator (slide 2-54, example 109)
+                #self.sa        = ...
+                #self.sg        = ...
+
+                #WSR_8: Create the arb object (slide 3-51, example 219)
+                #self.arb       = ...
+
                 self.sa.timeout = 5000
                 self.sg.timeout = 5000
-                self.scpi_sa    = SCPIWrapper(instr=self.sa, log= self.log, name='SA')
-                self.scpi_sg    = SCPIWrapper(instr=self.sg, log= self.log, name='SG')
+
+                #WSR_9: Create the SCPIWrapper objects for the spectrum analyzer and signal generator (slide 4-40)
+                #self.scpi_sa    = ...
+                #self.scpi_sg    = ...
 
                 self.log.info(f"Connected to {ip_sa=} and {ip_sg=}")
 
@@ -120,11 +120,12 @@ class LabNetworkControl(QMainWindow):
                 idn_sg      = ','.join( self.scpi_sg.query("*IDN?").split(',')[1:3])
                 # Remove the firmware revision
                 self.setWindowTitle('SA:' + idn_sa + " | SG:" + idn_sg)
-                # Reset and clear all status (errors) of the spectrum analyzer
-                self.scpi_sa.write("*RST")
-                self.scpi_sa.write("*CLS")
-                self.scpi_sg.write("*RST")
-                self.scpi_sg.write("*CLS")
+                #WSR_10: Send reset, clear to both sa and sg (slide 4-11)
+                #
+                #
+                #
+                #
+
                 # Load the arb with a two tone signal
 
 
@@ -177,9 +178,10 @@ class LabNetworkControl(QMainWindow):
             self.scpi = None
 
     def cb_ptx(self):
-        ptx = self.h_gui['Ptx'].get_val()
+        #WSR_11: Set the signal generator power level to the value of the dial. Get the ptx from the GUI and send it to the SG
+        #
         if self.sg is not None:
-            self.scpi_sg.write(f":POW:LEV {ptx} dBm")
+            #
 
 
     # Callback function for the IP lineEdit
@@ -219,9 +221,10 @@ class LabNetworkControl(QMainWindow):
             # Get the trace from the spectrum analyzer
             trace, freq = self.sa_read_trace()
             # Plot the trace
-            self.plot_sa.plot(freq, trace, line='b-', line_width=3.0,
-                              xlabel='Frequency (MHz)', ylabel='Power dBm',
-                              title='Spectrum Analyzer', xlog=False, clf=True)
+            # WSR_12: Plot the trace from the spectrum analyzer (slide 4-21, example 310),
+            # set the x and y labels, title, line width to 3.0 and clear the plot
+            #
+
 
     # thread callback functions
     def tcb_progress(self, i):
@@ -239,27 +242,26 @@ class LabNetworkControl(QMainWindow):
     def cb_testpa(self):
         if self.sender().isChecked():
             if self.sa is not None:
-                self.timer.stop()
+                #WSR_13: Stop the timer (slide 4-23)
+                #
                 self.log.info("Initialize scan params")
                 self.f_scan = np.linspace(self.h_gui['Fstart' ].get_val(),
                                           self.h_gui['Fstop'  ].get_val(),
                                           self.h_gui['Npoints'].get_val())
 
-                # initialize the freq and power arrays to empty
-                self.freq = np.array([])
-                self.power = np.array([])
-                # Create the thread object
-                self.thread = PaScan(f_scan=self.f_scan, scpi_sa=self.scpi_sa,scpi_sg=self.scpi_sg, loss= self.Params['Loss']) # Create the thread object
-                self.thread.progress.connect(self.tcb_progress  )
-                self.thread.data    .connect(self.tcb_plot      )
-                self.thread.log     .connect(self.log.info      )
+
+                #WSR_14: Create the thread object and connect it to signals, connect progress to tcb_progress, data to tcb_plot and log to self.log.info
+                #self.thread = ...
+                #
+                #
+                #
                 # Connect to LCD real time display
                 self.thread.lcd_g    .connect(self.h_gui['ScanG'    ].set_val)
                 self.thread.lcd_op1dB.connect(self.h_gui['ScanOP1dB'].set_val)
                 self.thread.lcd_oip3 .connect(self.h_gui['ScanOIP3' ].set_val)
                 self.thread.lcd_oip5 .connect(self.h_gui['ScanOIP5' ].set_val)
-
-                self.thread.start() # Start the thread calling the run method
+                # WSR_15: Start the thread (slide 4-26)
+                #
         else:
             # WS_4: Stop the thread/wait and recall the signal generator and spectrum analyzer state  (slide 4-26, example 310)
             self.log.info("Stop the thread")
@@ -338,7 +340,7 @@ if __name__ == "__main__":
     #  it is necessary to create an instance of this class before any GUI elements can be created
     app         = QApplication( sys.argv )
     # Create the LabDemoVsaControl object
-    controller  = LabNetworkControl()
+    controller  = PA_App()
     # Show the GUI
     controller.show()
     # Start the Qt event loop (the sys.exit is for correct exit status to the OS)

@@ -89,10 +89,10 @@ class PA_App(QMainWindow):
         self.Fspan  = None
         self.thread = None
 
-        # Create a timer for the Spectrum Analyzer plot
-        self.timer          = QTimer()
-        self.timer.timeout.connect(self.cb_timer_trace)
-        self.timer.start(250)
+        #WS_1 - Create a timer for the Spectrum Analyzer plot, connect it to cb_timer_trace and start it for 250ms (slide 4-24, example 310)
+        #
+        #
+        #
 
 
     # Callback function for the Connect button
@@ -126,13 +126,18 @@ class PA_App(QMainWindow):
                 self.scpi_sg.write("*RST")
                 self.scpi_sg.write("*CLS")
                 # Load the arb with a two tone signal
-                sig = multitone(BW=self.Params['ArbFd'], Ntones=2,
-                                Fs=self.Params['ArbFs'], Nfft=2048)
 
-                self.arb.configure(fs=self.Params['ArbFs']*1e6, iqScale=70 )
-                self.arb.download_wfm(sig, wfmID='TwoTones')
+
+                #WS_2 - configure the multitone for a 2 tone signal with the bandwidth of the PA and the sampling frequency of the arb
+                # and play the signal on the arb (slide 3-51, example 219). Use ArbFd as BW and ArbFS as Fs (from the yaml),
+                # remember that the configure function of the arb object takes the sampling frequency in Hz
+                #sig = multitone(...
+                #self.arb.configure(...
+                #self.arb.download_wfm(...
                 self.arb.set_alcState(0) # ALC Off (DO not use bool)
-                self.arb.play('TwoTones')
+                #self.arb.play(...
+
+
                 # Set the signal generator to output power
                 self.scpi_sg.write(f":POW:LEV {self.h_gui["Ptx"].get_val()} dBm")
                 # Set the spectrum analyzer span and RBW detector AVG and trace to clear/write
@@ -145,9 +150,9 @@ class PA_App(QMainWindow):
                 # Set the spectrum analyzer center frequency and the signal generator frequency
                 self.scpi_sa.write(f"freq:cent {self.Params['Fnominal']} MHz")
                 self.scpi_sg.write(f"freq {     self.Params['Fnominal']} MHz")
-                # Save the signal generator and spectrum analyzer state
-                self.scpi_sa.write("*SAV 1")
-                self.scpi_sg.write("*SAV 1")
+                # WS_3 Save the signal generator and spectrum analyzer state for the spectrum analyzer and signal generator (slide 4-11)
+                #
+                #
                 time.sleep(0.01)
             except Exception:
                 self.log.error("Connection failed")
@@ -254,15 +259,16 @@ class PA_App(QMainWindow):
 
                 self.thread.start() # Start the thread calling the run method
         else:
+            # WS_4: Stop the thread/wait and recall the signal generator and spectrum analyzer state  (slide 4-26, example 310)
             self.log.info("Stop the thread")
             if self.thread is not None:
-                self.thread.stop()
-                self.thread.wait()
+                #
+                #
                 self.thread = None
-                # Recall signal generator and spectrum analyzer state
-                self.scpi_sa.write("*RCL 1")
-                self.scpi_sg.write("*RCL 1")
-                self.timer.start()
+                # Recall signal generator and spectrum analyzer state (slide 4-12) and start the timer (slide 4-24, example 310)
+                #
+                #
+                #
 
 
     def cb_save(self):
