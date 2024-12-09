@@ -214,7 +214,7 @@ class LabNetworkControl(QMainWindow):
             # Get the trace from the spectrum analyzer
             trace, freq = self.sa_read_trace()
             # Plot the trace
-            self.plot_sa.plot(freq, trace, line='b-', line_width=1.5,
+            self.plot_sa.plot(freq, trace, line='b-', line_width=3.0,
                               xlabel='Frequency (MHz)', ylabel='Power dBm',
                               title='Spectrum Analyzer', xlog=False, clf=True)
 
@@ -227,7 +227,7 @@ class LabNetworkControl(QMainWindow):
         freq_v  = self.f_scan
         power_v = np.concatenate((power, np.ones(len(freq_v)-len(power))*power[0]))
         self.plot_sa.plot( freq_v , power_v,
-                           line=color , line_width=1.5,
+                           line=color , line_width=3.0,
                            xlabel='Frequency (MHz)', ylabel='Power dBm',
                            title='Filter response', xlog=False, clf=clf, legend=legend)
 
