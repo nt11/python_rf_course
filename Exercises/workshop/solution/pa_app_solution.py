@@ -13,7 +13,7 @@ from python_rf_course.utils.logging_widget  import setup_logger
 from python_rf_course.utils.SCPI_wrapper    import *
 from python_rf_course.utils.multitone       import multitone
 
-from pa_app_scan import PaScan
+from pa_app_thread import PaScan
 
 import pyvisa
 import pyvisa_py
