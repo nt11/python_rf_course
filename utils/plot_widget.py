@@ -4,7 +4,7 @@ import pyqtgraph as pg
 import numpy     as np
 
 class PlotWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, x_zoom=True, y_zoom=True, rect_zoom=False):
         super().__init__(parent)
 
         layout              = QVBoxLayout()
@@ -16,8 +16,11 @@ class PlotWidget(QWidget):
         self.legend         = []
         self.plot()  # Call plot function to initially populate the plot
 
-        self.plot_widget.setMouseEnabled(x=True, y=True)
+        self.plot_widget.setMouseEnabled(x=x_zoom, y=y_zoom)
         self.plot_widget.showGrid(x=True, y=True)
+
+        if rect_zoom:
+            self.set_rect_zoom_mode()
 
     def clear(self):
         self.plot_widget.clear()
@@ -65,8 +68,9 @@ class PlotWidget(QWidget):
             '--': Qt.PenStyle.DashLine     ,
             ':' : Qt.PenStyle.DotLine      ,
             '-.': Qt.PenStyle.DashDotLine  }
+        self.plot_widget.addLegend()
         self.plot_widget.plot(x.flatten(), y.flatten(),
-                              pen=pg.mkPen(line[0], width=line_width,style = style_dict[line[1:]]))
+                              pen=pg.mkPen(line[0], width=line_width,style = style_dict[line[1:]]), name = legend)
 
         self.plot_widget.setLabel('bottom'  , xlabel)
         self.plot_widget.setLabel('left'    , ylabel)
@@ -93,9 +97,21 @@ class PlotWidget(QWidget):
             # set Y axis to auto scale
             self.plot_widget.enableAutoRange(axis='y')
 
-        if legend is not None:
-            self.legend.append(legend)
-            self.plot_widget.setLegend(self.legend)
+        # if legend is not None:
+        #     self.legend.append(legend)
+        #     self.plot_widget.setLegend(self.legend)
 
         # draw the plot
         self.plot_widget.repaint()
+
+    def set_rect_zoom_mode(self):
+        self.plot_widget.getViewBox().setMouseMode(pg.ViewBox.RectMode)
+
+    def set_pan_mode(self):
+        self.plot_widget.getViewBox().setMouseMode(pg.ViewBox.PanMode)
+
+    def set_y_range(self, y_min, y_max):
+        self.plot_widget.setYRange(y_min, y_max)
+
+    def set_x_range(self, x_min, x_max):
+        self.plot_widget.setXRange(x_min, x_max)
