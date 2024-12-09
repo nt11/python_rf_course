@@ -53,16 +53,8 @@ class PaScan(QThread):
 
             # Small signal gain
             self.scpi_sg.write(":OUTPUT:MOD:STATE OFF") # Modulation off
-            # Initiate a single sweep
-            self.scpi_sa.write("INITiate:IMMediate")
-            try:
-                self.scpi_sa.query("*OPC?")
-            except pyvisa.errors.VisaIOError:
-                self.log.emit(f"Thread: OPC Failed at {f} MHz")
-            # Set marker to peak
-            self.scpi_sa.write("CALCulate:MARKer:MAXimum")
-            # Get the peak value
-            peak_value = float(self.scpi_sa.query("CALCulate:MARKer:Y?").strip())
+            peak_value = self.sa_sweep_marker_max()
+
             # Set the reference level
             max_level  = np.ceil( peak_value/10 + 1)*10
             set_level  = float(self.scpi_sa.query(f"DISP:WIND:TRAC:Y:RLEV?") )
@@ -79,15 +71,7 @@ class PaScan(QThread):
             # Slow scan increase power by 0.1 dB Gheck the gain drop until it is 1 dB
             for p_tx in np.arange(p_tx_nominal - 3, p_tx_nominal + 5, 0.1):
                 self.scpi_sg.write(f"POW:LEV {p_tx}")
-                self.scpi_sa.write("INITiate:IMMediate")
-                try:
-                    self.scpi_sa.query("*OPC?")
-                except pyvisa.errors.VisaIOError:
-                    self.log.emit(f"Thread: OPC Failed at {f} MHz")
-                # Set marker to peak
-                self.scpi_sa.write("CALCulate:MARKer:MAXimum")
-                # Get the peak value
-                peak_value  = float(self.scpi_sa.query("CALCulate:MARKer:Y?"))
+                peak_value  = self.sa_sweep_marker_max()
                 gain_i      = peak_value  + self.loss - p_tx
                 gain_diff   = gain[-1] - gain_i
                 # Check if the gain has dropped by 1 dB
@@ -105,14 +89,7 @@ class PaScan(QThread):
             # Modulation On and tx power to nominal
             self.scpi_sg.write(":OUTPUT:MOD:STATE ON")
             self.scpi_sg.write(f"POW:LEV {p_tx_nominal}")
-            self.scpi_sa.write("INITiate:IMMediate")
-            try:
-                self.scpi_sa.query("*OPC?")
-            except pyvisa.errors.VisaIOError:
-                self.log.emit(f"Thread: OPC Failed at {f} MHz")
-            # Set marker to peak
-            self.scpi_sa.write("CALCulate:MARKer:MAXimum")
-            peak_value = float(self.scpi_sa.query("CALCulate:MARKer:Y?"))
+            peak_value = self.sa_sweep_marker_max()
             p_i        = peak_value + self.loss
             # Next peak twice (OIP3)
             self.scpi_sa.write("CALCulate:MARKer:MAXimum:NEXT")
@@ -145,9 +122,20 @@ class PaScan(QThread):
             if not self.running:
                 break
 
-        # Emit the data signal
-        #self.data.emit(freq, gain, True, f"Gain")
-        #self.data.emit(freq, op1dB, False, f"OP1dB")
+
+    def sa_sweep_marker_max(self):
+        # Initiate a single sweep
+        self.scpi_sa.write("INITiate:IMMediate")
+        try:
+            self.scpi_sa.query("*OPC?")
+        except pyvisa.errors.VisaIOError:
+            self.log.emit(f"Thread: OPC Failed at {f} MHz")
+        # Set marker to peak
+        self.scpi_sa.write("CALCulate:MARKer:MAXimum")
+        # Get the peak value
+        peak_value = float(self.scpi_sa.query("CALCulate:MARKer:Y?"))
+
+        return peak_value
 
 
     def stop(self):
