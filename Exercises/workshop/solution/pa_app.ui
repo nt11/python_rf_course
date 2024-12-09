@@ -35,7 +35,7 @@
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="1" column="2">
+        <item row="1" column="3">
          <layout class="QGridLayout" name="gridLayout_3">
           <item row="3" column="0">
            <widget class="QLabel" name="label_5">
@@ -131,7 +131,7 @@
           </item>
          </layout>
         </item>
-        <item row="0" column="2">
+        <item row="0" column="3">
          <widget class="QPushButton" name="pushButton_2">
           <property name="text">
            <string>Test PA</string>
@@ -141,7 +141,7 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="4">
+        <item row="1" column="7">
          <layout class="QGridLayout" name="gridLayout_6">
           <item row="3" column="0">
            <widget class="QLabel" name="label_12">
@@ -229,6 +229,109 @@
           </item>
          </layout>
         </item>
+        <item row="0" column="7">
+         <widget class="QLabel" name="label_17">
+          <property name="text">
+           <string>Live Score</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="6">
+         <widget class="Line" name="line">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="6">
+         <widget class="Line" name="line_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="Line" name="line_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="Line" name="line_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="5">
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_19">
+            <property name="text">
+             <string>Set Nominal Power</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="label_18">
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QDial" name="dial">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>50</height>
+             </size>
+            </property>
+            <property name="minimum">
+             <number>-25</number>
+            </property>
+            <property name="maximum">
+             <number>-5</number>
+            </property>
+            <property name="notchTarget">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="notchesVisible">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>dBm</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="Line" name="line_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="Line" name="line_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="Line" name="line_8">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
         <item row="0" column="0">
          <spacer name="horizontalSpacer_2">
           <property name="orientation">
@@ -242,36 +345,8 @@
           </property>
          </spacer>
         </item>
-        <item row="0" column="4">
-         <widget class="QLabel" name="label_17">
-          <property name="text">
-           <string>Live Score</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="Line" name="line">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="Line" name="line_2">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="Line" name="line_3">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="Line" name="line_4">
+        <item row="1" column="4">
+         <widget class="Line" name="line_5">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
@@ -312,13 +387,13 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionSaVE"/>
+    <addaction name="actionSave"/>
     <addaction name="actionLoad"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionSaVE">
+  <action name="actionSave">
    <property name="text">
     <string>Save</string>
    </property>
@@ -336,5 +411,22 @@
   </action>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>dial</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>label_18</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>453</x>
+     <y>272</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>453</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

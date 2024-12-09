@@ -5,7 +5,7 @@ import numpy as np
 class PaScan(QThread):
     # Define signals as class attributes (for progressbar and returned data)
     progress    = pyqtSignal(int)
-    data        = pyqtSignal(np.ndarray, np.ndarray)
+    data        = pyqtSignal(np.ndarray, np.ndarray, bool, str) # freq, power, clf , legend
     name        = pyqtSignal(str) # G,OP1dB,OIP3,OIP5
     log         = pyqtSignal(str)
     # LCD signals
@@ -29,9 +29,6 @@ class PaScan(QThread):
 
         # Set RF output on
         self.scpi_sg.write(":OUTPUT:STATE ON")
-        self.scpi_sg.write(":OUTPUT:MOD:STATE OFF")
-        # set the RBW
-        self.scpi_sa.write("sense:BANDwidth:RESolution 0.1 MHz")
         self.scpi_sa.write("sense:DETEctor AVERage")
         # Trace Clear/write mode
         self.scpi_sa.write("TRACe:MODE WRITe")
@@ -45,15 +42,15 @@ class PaScan(QThread):
             self.scpi_sg.write(f"freq {f} MHz")
             # Set the SA center frequency
             self.scpi_sa.write(f"sense:FREQuency:CENTer {f} MHz")
-            # Set the span
-            self.scpi_sa.write(f"sense:FREQuency:SPAN 5 MHz")
+
+            # Small signal gain
+            self.scpi_sg.write(":OUTPUT:MOD:STATE OFF") # Modulation off
             # Initiate a single sweep
             self.scpi_sa.write("INITiate:IMMediate")
             try:
                 self.scpi_sa.query("*OPC?")
             except pyvisa.errors.VisaIOError:
                 self.log.emit(f"Thread: OPC Failed at {f} MHz")
-
             # Set marker to peak
             self.scpi_sa.write("CALCulate:MARKer:MAXimum")
             # Get the peak value
@@ -63,13 +60,14 @@ class PaScan(QThread):
             set_level  = float(self.scpi_sa.query(f"DISP:WIND:TRAC:Y:RLEV?").strip() )
             if set_level != max_level:
                 self.log.emit(f"Thread: Setting reference level to {max_level}")
-            self.scpi_sa.write(f"DISP:WIND:TRAC:Y:RLEV {max_level}")
+                self.scpi_sa.write(f"DISP:WIND:TRAC:Y:RLEV {max_level}")
             # save the peak value and frequency
             power = np.append(power, peak_value)
             freq  = np.append(freq, f)
 
             if i%20==0:
-                self.data.emit(freq, power)
+                self.name.emit("Gain")
+                self.data.emit(freq, power, True, f"Gain")
 
             # Update the progress bar
             self.progress.emit(100 * (i + 1) // len(self.f_scan))
@@ -77,7 +75,7 @@ class PaScan(QThread):
                 break
 
         # Emit the data signal
-        self.data.emit(freq, power)
+        self.data.emit(freq, power, True, f"Small Signal Gain")
 
 
     def stop(self):

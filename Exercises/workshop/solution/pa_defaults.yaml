@@ -5,4 +5,7 @@ Fstop    : 1200.0     # MHz float
 Npoints  : 100        # int
 Ptx      : -15        # dBm int
 Loss     : 31.6       # dB float setup loss (attenuator and cables)
+ArbFs    : 20.0       # MHz float
+ArbFd    : 2.0        # MHz float
+Fnominal : 500.0      # MHz float
 

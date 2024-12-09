@@ -3,6 +3,7 @@ import re
 import  yaml
 from    PyQt6.QtWidgets    import QApplication, QMainWindow, QVBoxLayout
 from    PyQt6.uic          import loadUi
+from    PyQt6.QtCore       import QTimer
 
 import numpy as np
 
@@ -10,9 +11,16 @@ from python_rf_course.utils.pyqt2python     import h_gui
 from python_rf_course.utils.plot_widget     import PlotWidget
 from python_rf_course.utils.logging_widget  import setup_logger
 from python_rf_course.utils.SCPI_wrapper    import *
+from python_rf_course.utils.multitone       import multitone
 
 from pa_app_scan import PaScan
 
+import pyvisa
+import pyvisa_py
+import pyarbtools as arb
+
+import logging
+import time
 
 def is_valid_ip(ip:str) -> bool:
     # Regular expression pattern for matching IP address
@@ -40,6 +48,7 @@ class LabNetworkControl(QMainWindow):
             TestPaProgress      = h_gui(self.progressBar        , None              ),
             IP_SG               = h_gui(self.lineEdit           , self.cb_ip_sg             ),
             IP_SA               = h_gui(self.lineEdit_2         , self.cb_ip_sa             ),
+            Ptx                 = h_gui(self.dial               , self.cb_ptx              ),
             Fstart              = h_gui(self.lineEdit_3         , self.cb_scan              ),
             Fstop               = h_gui(self.lineEdit_4         , self.cb_scan              ),
             Npoints             = h_gui(self.lineEdit_5         , self.cb_scan              ),
@@ -54,6 +63,7 @@ class LabNetworkControl(QMainWindow):
         self.rm         = pyvisa.ResourceManager('@py')
         self.sa         = None
         self.sg         = None
+        self.arb        = None
 
         # Load the configuration/default values from the YAML file
         self.Params     = None
@@ -67,6 +77,7 @@ class LabNetworkControl(QMainWindow):
             self.log.warning("No last.yaml file found")
 
         self.h_gui['Save'].emit() #  self.cb_save
+        self.h_gui['Ptx'].set_val(self.h_gui['Ptx'].get_val()) #  Update the signal (event)
 
         # Create a widget for the Spectrum Analyzer plot
         self.plot_sa        = PlotWidget()
@@ -75,7 +86,15 @@ class LabNetworkControl(QMainWindow):
 
         # Iinitilize the freq and power arrays to empty
         self.f_scan = np.array([])
+        self.Offset = 0
+        self.Fspan  = None
         self.thread = None
+
+        # Create a timer for the Spectrum Analyzer plot
+        self.timer          = QTimer()
+        self.timer.timeout.connect(self.cb_timer_trace)
+        self.timer.start(250)
+
 
     # Callback function for the Connect button
     # That is a checkable button
@@ -88,12 +107,14 @@ class LabNetworkControl(QMainWindow):
                 ip_sg          = self.h_gui['IP_SG'].get_val()
                 self.sa        = self.rm.open_resource(f"TCPIP0::{ip_sa}::inst0::INSTR")
                 self.sg        = self.rm.open_resource(f"TCPIP0::{ip_sg}::inst0::INSTR")
+                self.arb       = arb.instruments.VSG(ip_sg, timeout=5)
                 self.sa.timeout = 5000
                 self.sg.timeout = 5000
                 self.scpi_sa    = SCPIWrapper(instr=self.sa, log= self.log, name='SA')
                 self.scpi_sg    = SCPIWrapper(instr=self.sg, log= self.log, name='SG')
 
                 self.log.info(f"Connected to {ip_sa=} and {ip_sg=}")
+
                 # Query the signal generator name
                 # <company_name>, <model_number>, <serial_number>,<firmware_revision>
                 idn_sa      = ','.join( self.scpi_sa.query("*IDN?").split(',')[1:3])
@@ -105,6 +126,30 @@ class LabNetworkControl(QMainWindow):
                 self.scpi_sa.write("*CLS")
                 self.scpi_sg.write("*RST")
                 self.scpi_sg.write("*CLS")
+                # Load the arb with a two tone signal
+                sig = multitone(BW=self.Params['ArbFd'], Ntones=2,
+                                Fs=self.Params['ArbFs'], Nfft=2048)
+
+                self.arb.configure(fs=self.Params['ArbFs']*1e6, iqScale=70 )
+                self.arb.download_wfm(sig, wfmID='TwoTones')
+                self.arb.set_alcState(0) # ALC Off (DO not use bool)
+                self.arb.play('TwoTones')
+                # Set the signal generator to output power
+                self.scpi_sg.write(f":POW:LEV {self.h_gui["Ptx"].get_val()} dBm")
+                # Set the spectrum analyzer span and RBW detector AVG and trace to clear/write
+                self.Fspan = self.Params['ArbFd']*5.0 + 2.0 # Contains the 5th harmonic
+                self.scpi_sa.write(f"freq:span {self.Fspan} MHz")
+                self.scpi_sa.write(f"sense:BANDwidth:RESolution {self.Params['ArbFd']/8.0} MHz") # Maximal RBW for the scan
+                self.scpi_sa.write("sense:DETEctor AVERage")
+                self.scpi_sa.write("TRACe:MODE WRITe")
+                self.scpi_sa.write("INITiate:CONTinuous On")
+                # Set the spectrum analyzer center frequency and the signal generator frequency
+                self.scpi_sa.write(f"freq:cent {self.Params['Fnominal']} MHz")
+                self.scpi_sg.write(f"freq {     self.Params['Fnominal']} MHz")
+                # Save the signal generator and spectrum analyzer state
+                self.scpi_sa.write("*SAV 1")
+                self.scpi_sg.write("*SAV 1")
+                time.sleep(0.01)
             except Exception:
                 self.log.error("Connection failed")
                 if self.sa is not None:
@@ -126,6 +171,12 @@ class LabNetworkControl(QMainWindow):
                 self.sg = None
                 
             self.scpi = None
+
+    def cb_ptx(self):
+        ptx = self.h_gui['Ptx'].get_val()
+        if self.sg is not None:
+            self.scpi_sg.write(f":POW:LEV {ptx} dBm")
+
 
     # Callback function for the IP lineEdit
     def cb_ip_sa(self):
@@ -150,38 +201,76 @@ class LabNetworkControl(QMainWindow):
 
         self.log.info(f"SG IP = {ip}")
 
+    def sa_read_trace(self):
+        if self.sa is not None:
+            # Query trace data PyVISA method for reading numerical data from instruments
+            p           = self.sa.query_ascii_values(":TRACe:DATA? TRACE1", container=np.array)
+            # Calculate frequency points
+            f           = np.linspace(self.Params['Fnominal'] - self.Fspan/2, self.Params['Fnominal'] + self.Fspan/2, len(p))
+
+            return p, f
+
+    def cb_timer_trace(self):
+        if self.sa is not None:
+            # Get the trace from the spectrum analyzer
+            trace, freq = self.sa_read_trace()
+            # Plot the trace
+            self.plot_sa.plot(freq, trace, line='b-', line_width=1.5,
+                              xlabel='Frequency (MHz)', ylabel='Power dBm',
+                              title='Spectrum Analyzer', xlog=False, clf=True)
+
     # thread callback functions
     def tcb_progress(self, i):
         self.h_gui['TestPaProgress'].set_val(i)
 
+    def tcb_name(self, name):
+        if name == 'Gain':
+            self.Offset = self.Params['Loss'] - self.h_gui['Ptx'].get_val()
+
     # thread callback functions
-    def tcb_plot(self, freq, power, clf,legend):
+    def tcb_plot(self, freq, power, clf= True,legend='Gain'):
         freq_v  = self.f_scan
-        power_v = np.concatenate((power, np.ones(len(freq_v)-len(power))*-100)) - self.Params['Ptx']
+        power_v = np.concatenate((power, np.ones(len(freq_v)-len(power))*-100)) + self.Offset
         self.plot_sa.plot( freq_v , power_v,
                            line='b-' , line_width=1.5,
                            xlabel='Frequency (MHz)', ylabel='Power dBm',
                            title='Filter response', xlog=False, clf=clf, legend=legend)
 
     def cb_testpa(self):
-        if self.sa is not None:
-            self.log.info("Start scan")
-            self.f_scan = np.linspace(self.h_gui['Fstart'].get_val(),
-                                      self.h_gui['Fstop'  ].get_val(),
-                                      self.h_gui['Npoints'].get_val())
-            # Set the signal generator to output power (self.Params["Ptx"]))
-            self.scpi_sg.write(f":OUTP:STAT OFF")
-            self.scpi_sg.write(f":POW:LEV {self.Params['Ptx']} dBm")
-            # initialize the freq and power arrays to empty
-            self.freq = np.array([])
-            self.power = np.array([])
-            # Create the thread object
-            self.thread = PaScan(f_scan=self.f_scan, scpi_sa=self.scpi_sa,scpi_sg=self.scpi_sg) # Create the thread object
-            self.thread.progress.connect(self.tcb_progress)
-            self.thread.data.connect(self.tcb_plot)
-            self.thread.log.connect( self.log.info)
+        if self.sender().isChecked():
+            if self.sa is not None:
+                self.timer.stop()
+                self.log.info("Initialize scan params")
+                self.f_scan = np.linspace(self.h_gui['Fstart' ].get_val(),
+                                          self.h_gui['Fstop'  ].get_val(),
+                                          self.h_gui['Npoints'].get_val())
 
-            self.thread.start() # Start the thread calling the run method
+                # initialize the freq and power arrays to empty
+                self.freq = np.array([])
+                self.power = np.array([])
+                # Create the thread object
+                self.thread = PaScan(f_scan=self.f_scan, scpi_sa=self.scpi_sa,scpi_sg=self.scpi_sg) # Create the thread object
+                self.thread.progress.connect(self.tcb_progress  )
+                self.thread.data    .connect(self.tcb_plot      )
+                self.thread.name    .connect(self.tcb_name      )
+                self.thread.log     .connect(self.log.info      )
+                # Connect to LCD real time display
+                self.thread.lcd_g    .connect(self.h_gui['ScanG'    ].set_val)
+                self.thread.lcd_op1dB.connect(self.h_gui['ScanOP1dB'].set_val)
+                self.thread.lcd_oip3 .connect(self.h_gui['ScanOIP3' ].set_val)
+                self.thread.lcd_oip5 .connect(self.h_gui['ScanOIP5' ].set_val)
+
+                self.thread.start() # Start the thread calling the run method
+        else:
+            self.log.info("Stop the thread")
+            if self.thread is not None:
+                self.thread.stop()
+                self.thread.wait()
+                self.thread = None
+                # Recall signal generator and spectrum analyzer state
+                self.scpi_sa.write("*RCL 1")
+                self.scpi_sg.write("*RCL 1")
+                self.timer.start()
 
 
     def cb_save(self):
@@ -198,10 +287,21 @@ class LabNetworkControl(QMainWindow):
         self.log.info("Load")
         try:
             with open(self.file_name, "r") as f:
-                self.Params = yaml.safe_load(f)
+                params = yaml.safe_load(f)
+
+            if self.Params is not None:
+                for key in self.Params.keys():
+                    if key in params:
+                        self.Params[key] = params[key]
+                    else:
+                        self.log.error(f"Key not found: {key}")
+            else:
+                self.Params = params
+
         except FileNotFoundError:
             self.log.info(f"File not found: {self.file_name}")
             raise
+
 
 
         # Set the default values to the GUI objects
