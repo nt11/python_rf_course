@@ -35,7 +35,7 @@ class LabNetworkControl(QMainWindow):
         # Load the UI file into the Class (LabDemoVsaControl) object
         loadUi("pa_app.ui", self)
         # Create Logger
-        self.log = setup_logger(text_browser=self.textBrowser,name='pa_log', level=logging.DEBUG,is_console=True)
+        self.log = setup_logger(text_browser=self.textBrowser,name='pa_log', level=logging.INFO,is_console=True)
         logging.getLogger('pa_log').propagate = True
         self.scpi = None
 
@@ -86,7 +86,6 @@ class LabNetworkControl(QMainWindow):
 
         # Iinitilize the freq and power arrays to empty
         self.f_scan = np.array([])
-        self.Offset = 0
         self.Fspan  = None
         self.thread = None
 
@@ -223,16 +222,12 @@ class LabNetworkControl(QMainWindow):
     def tcb_progress(self, i):
         self.h_gui['TestPaProgress'].set_val(i)
 
-    def tcb_name(self, name):
-        if name == 'Gain':
-            self.Offset = self.Params['Loss'] - self.h_gui['Ptx'].get_val()
-
     # thread callback functions
-    def tcb_plot(self, freq, power, clf= True,legend='Gain'):
+    def tcb_plot(self, freq, power, clf= True,legend='Gain',color='b-'):
         freq_v  = self.f_scan
-        power_v = np.concatenate((power, np.ones(len(freq_v)-len(power))*-100)) + self.Offset
+        power_v = np.concatenate((power, np.ones(len(freq_v)-len(power))*power[0]))
         self.plot_sa.plot( freq_v , power_v,
-                           line='b-' , line_width=1.5,
+                           line=color , line_width=1.5,
                            xlabel='Frequency (MHz)', ylabel='Power dBm',
                            title='Filter response', xlog=False, clf=clf, legend=legend)
 
@@ -249,10 +244,9 @@ class LabNetworkControl(QMainWindow):
                 self.freq = np.array([])
                 self.power = np.array([])
                 # Create the thread object
-                self.thread = PaScan(f_scan=self.f_scan, scpi_sa=self.scpi_sa,scpi_sg=self.scpi_sg) # Create the thread object
+                self.thread = PaScan(f_scan=self.f_scan, scpi_sa=self.scpi_sa,scpi_sg=self.scpi_sg, loss= self.Params['Loss']) # Create the thread object
                 self.thread.progress.connect(self.tcb_progress  )
                 self.thread.data    .connect(self.tcb_plot      )
-                self.thread.name    .connect(self.tcb_name      )
                 self.thread.log     .connect(self.log.info      )
                 # Connect to LCD real time display
                 self.thread.lcd_g    .connect(self.h_gui['ScanG'    ].set_val)
@@ -323,6 +317,7 @@ class LabNetworkControl(QMainWindow):
 
     def closeEvent(self, event):
         self.log.info("Exiting the application")
+        self.timer.stop()
         # Clean up the resources
         # Close the connection to the signal generator
         if self.sa is not None:
