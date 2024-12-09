@@ -26,14 +26,15 @@ class PaScan(QThread):
         self.running = True
         self.log.emit("Thread: Starting scan")
 
-        # Set RF output on
-        self.scpi_sg.write(":OUTPUT:STATE ON")
-        self.scpi_sa.write("sense:DETEctor AVERage")
-        # Trace Clear/write mode
-        self.scpi_sa.write("TRACe:MODE WRITe")
-        self.scpi_sa.write("INITiate:CONTinuous OFF")
+        #WK_1: Signal Generator RF Output On
+        #
+        #WK_2: Spectrum Analyzer Detector Average, Trace Mode Write, Single Sweep Mode
+        #
+        #
+        #
 
-        p_tx_nominal = float(self.scpi_sg.query("POW:LEV?"))
+        #WK_3: Get the power level from the signal generator into p_tx_nominal
+        #p_tx_nominal = ...
 
         # Create a list to store the scan data
         gain    = np.array([])
@@ -45,14 +46,17 @@ class PaScan(QThread):
         for i, f in enumerate(self.f_scan):
             # Set the SG to the frequency of the current scan point and power level
             p_tx = p_tx_nominal - 5 # Check gain at low power
-            self.scpi_sg.write(f"POW:LEV {p_tx}")
-            self.scpi_sg.write(f"freq {f} MHz")
+            #WK_4: Set the signal generator frequency and power level
+            #
+            #
 
-            # Set the SA center frequency
-            self.scpi_sa.write(f"sense:FREQuency:CENTer {f} MHz")
+            #WK_5: Set the SA center frequency
+            #
 
             # Small signal gain
-            self.scpi_sg.write(":OUTPUT:MOD:STATE OFF") # Modulation off
+            #WK_6: Set the signal generator modulation off for CW testing
+            #
+            # Get the peak value
             peak_value = self.sa_sweep_marker_max()
 
             # Set the reference level
@@ -61,24 +65,34 @@ class PaScan(QThread):
             if set_level != max_level:
                 self.log.emit(f"Thread: Setting reference level to {max_level}")
                 self.scpi_sa.write(f"DISP:WIND:TRAC:Y:RLEV {max_level}")
-            # save the peak value and frequency
-            gain_i = peak_value + self.loss - p_tx
+
+            # compute the gain and save the frequency and gain
+            #WK_7: Compute the gain from the peak value, loss and power level
+            #gain_i = ...
             gain = np.append(gain, gain_i)
             freq  = np.append(freq, f)
             # Update the Gain LCD
-            self.lcd_g.emit(gain_i)
+            #WK_8 Emit a signal to the gain LCD (slide 4-27, example o310)
+            #
+
+
             # OP1dB
             # Slow scan increase power by 0.1 dB Gheck the gain drop until it is 1 dB
             for p_tx in np.arange(p_tx_nominal - 3, p_tx_nominal + 5, 0.1):
-                self.scpi_sg.write(f"POW:LEV {p_tx}")
+                #WK_9: Set the signal generator power level to p_tx
+                #
                 peak_value  = self.sa_sweep_marker_max()
-                gain_i      = peak_value  + self.loss - p_tx
+                #WK_10: Compute the gain from the peak value, loss and power level
+                #gain_i      = ...
                 gain_diff   = gain[-1] - gain_i
                 # Check if the gain has dropped by 1 dB
                 if gain_diff >= 1:
-                    op1dB_i = peak_value  + self.loss
-                    op1dB = np.append(op1dB, op1dB_i )
-                    self.lcd_op1dB.emit(op1dB_i)
+                    #WK_11 compute the op1dB from the peak value and loss
+                    #op1dB_i = ...
+                    #WK_12: Append the op1dB_i to the op1dB list
+                    #op1dB = ...
+                    #WK_13: Emit a signal to the OP1dB LCD, (slide 4-27, example o310)
+                    #
                     break
             else:
                 op1dB_i = peak_value + self.loss
@@ -86,22 +100,24 @@ class PaScan(QThread):
                 self.lcd_op1dB.emit(op1dB_i)
 
             # OIP3 and OIP5
-            # Modulation On and tx power to nominal
-            self.scpi_sg.write(":OUTPUT:MOD:STATE ON")
-            self.scpi_sg.write(f"POW:LEV {p_tx_nominal}")
+            # WK_14 Modulation On and tx power to p_tx_nominal on signal generator
+            #
+            #
             peak_value = self.sa_sweep_marker_max()
             p_i        = peak_value + self.loss
             # Next peak twice (OIP3)
             self.scpi_sa.write("CALCulate:MARKer:MAXimum:NEXT")
             self.scpi_sa.write("CALCulate:MARKer:MAXimum:NEXT")
             # Get the peak value
-            peak_value = float(self.scpi_sa.query("CALCulate:MARKer:Y?"))
+            # WK_15: Get the peak value from the spectrum analyzer using a SCPI command
+            #peak_value = ...
             p_i3        = peak_value + self.loss
             # Next peak twice (OIP5)
             self.scpi_sa.write("CALCulate:MARKer:MAXimum:NEXT")
             self.scpi_sa.write("CALCulate:MARKer:MAXimum:NEXT")
             # Get the peak value
-            peak_value = float(self.scpi_sa.query("CALCulate:MARKer:Y?"))
+            # WK_16: Get the peak value from the spectrum analyzer using a SCPI command
+            #peak_value = ...
             p_i5        = peak_value + self.loss
 
             oip3_i = p_i + (p_i - p_i3)/2
@@ -124,16 +140,17 @@ class PaScan(QThread):
 
 
     def sa_sweep_marker_max(self):
-        # Initiate a single sweep
-        self.scpi_sa.write("INITiate:IMMediate")
+        # WK_17 Initiate a single sweep on the spectrum analyzer using a SCPI command
+        #
         try:
-            self.scpi_sa.query("*OPC?")
+        # WK_18 Check for operation complete using a SCPI command (OPC)
+            #
         except pyvisa.errors.VisaIOError:
             self.log.emit(f"Thread: OPC Failed at {f} MHz")
-        # Set marker to peak
-        self.scpi_sa.write("CALCulate:MARKer:MAXimum")
+        # Set marker to peak using a SCPI command
+        #
         # Get the peak value
-        peak_value = float(self.scpi_sa.query("CALCulate:MARKer:Y?"))
+        #peak_value = ...
 
         return peak_value
 
