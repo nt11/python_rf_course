@@ -37,8 +37,7 @@ def check_id(tz:str) -> bool:
 if __name__ == "__main__":
     print("Results")
     print("-------")
-    cs = generate_checksum_tz("398124")
+    cs = generate_checksum_tz("123")
     print(cs)
-    print(check_id("013495197"))
-    print(check_id("013495196"))
+
 

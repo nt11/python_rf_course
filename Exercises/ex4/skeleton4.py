@@ -1,6 +1,6 @@
 import re
 import sys
-
+import pyarbtools as arb
 import pyvisa
 # EX4: Add pyarbtools, name it arb. (slide 3-51 example 219)
 
@@ -45,7 +45,7 @@ class LabDemoMxgControl(QMainWindow):
         self.rm         = pyvisa.ResourceManager('@py') # EX4: make sure - '@py' is for the PyVISA-py backend
         self.sig_gen    = None
         # EX4: define similarly arb_gen
-
+        self.arb_gen    =arb.instrument.VSG(mxg_ip=self.Params["S
 
         # Load the configuration/default values from the YAML file
         self.Params     = None
