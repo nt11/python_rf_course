@@ -1,11 +1,10 @@
-import logging
 import re
+
 import  yaml
 from    PyQt6.QtWidgets    import QApplication, QMainWindow, QVBoxLayout
 from    PyQt6.uic          import loadUi
 
 import numpy as np
-from numpy.ma.core import power
 
 from python_rf_course.utils.pyqt2python     import h_gui
 from python_rf_course.utils.plot_widget     import PlotWidget
@@ -13,7 +12,7 @@ from python_rf_course.utils.logging_widget  import setup_logger
 from python_rf_course.utils.SCPI_wrapper    import *
 
 #EX5_1: Import the thread class form the ex5_long_process_skeleton_lite.py file
-from ex5_long_process_skeleton_lite import LongProcess
+#
 
 
 def is_valid_ip(ip:str) -> bool:
@@ -31,8 +30,6 @@ class LabNetworkControl(QMainWindow):
         # Create Logger
         # EX5_2: Create a logger object calling setup_logger with the name 'net_log' and set the level to DEBUG (Slide 4-30, example 310)
         #
-        self.log=setup_logger(self.textBrowser, name="net_log",level=logging.DEBUG)
-
         logging.getLogger('net_log').propagate = True
         self.scpi = None
 
@@ -73,12 +70,6 @@ class LabNetworkControl(QMainWindow):
         #
         #
         #
-        self.plot_sa    =PlotWidget()
-        layout          =QVBoxLayout(self.widget)
-        layout.addWidget(self.plot_sa)
-
-
-
 
         # Initialize the freq and power arrays to empty
         self.f_scan = np.array([])
@@ -102,8 +93,6 @@ class LabNetworkControl(QMainWindow):
                 # SCPI_wrapper.py in utils
                 #
                 #
-                self.scpi_sa=SCPIWrapper(instr=self.sa,log=self.log,name="SA")
-                self.scpi_sg=SCPIWrapper(instr=self.sg,log=self.log,name="SG")
 
                 self.log.info(f"Connected to {ip_sa=} and {ip_sg=}")
                 # Read the signal generator status and update the GUI (RF On/Off, Modulation On/Off,Pout and Fc)
@@ -167,7 +156,6 @@ class LabNetworkControl(QMainWindow):
     def tcb_progress(self, i):
         #Ex5_9: Set the progress bar value to i- The name in h_gui is GoProgress
         #
-        self.h_gui["GoProgress"].set_val(i)
 
     # thread callback functions
     def tcb_plot(self, freq, power):
@@ -189,16 +177,13 @@ class LabNetworkControl(QMainWindow):
             # Ex5_5: Set the signal generator to output power. Use the self.Params['Pout'] value to set the SG power using
             # the SCPI wrapper object
             #
-            self.scpi_sg.write(f"source:power:level {self.Params["Pout"]}")
-            self.scpi_sg.write(f":OUTP:STATe on")
+
             # initialize the freq and power arrays to empty
             self.freq = np.array([])
             self.power = np.array([])
             #EX5_6: Instatiate the thread object, call it self.thread. To understand how to do this, go to the file containing
             # LongProcess class and read the class and comments
             #
-            self.thread=LongProcess(f_scan=self.f_scan,scpi_sa=self.scpi_sa,scpi_sg=self.scpi_sg)
-
 
             #EX5_7: Connect the signals of the thread object to the callback functions. Slide 4-27 (example 310)
             # Connect progress to the callback tcb_progress
@@ -207,12 +192,10 @@ class LabNetworkControl(QMainWindow):
             #
             #
             #
-            self.thread.progress.connect(self.tcb_progress)
-            self.thread.data.connect(self.tcb_plot)
-            self.thread.log.connect(self.log.info)
 
             #EX5_8: Start the thread object. Slide 4-26 (example 310)
-            self.thread.start()
+            #
+
 
     def cb_save(self):
         self.log.info("Save")
