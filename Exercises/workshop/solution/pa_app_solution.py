@@ -57,6 +57,7 @@ class PA_App(QMainWindow):
             ScanOP1dB           = h_gui(self.lcdNumber_2        , None              ),
             ScanOIP3            = h_gui(self.lcdNumber_3        , None              ),
             ScanOIP5            = h_gui(self.lcdNumber_4        , None              ),
+            ScanPout            = h_gui(self.lcdNumber_5        , None              ),
             Save                = h_gui(self.actionSave         , self.cb_save              ),
             Load                = h_gui(self.actionLoad         , self.cb_load              ))
 
@@ -246,6 +247,21 @@ class PA_App(QMainWindow):
                            xlabel='Frequency (MHz)', ylabel='Power dBm',
                            title='Filter response', xlog=False, clf=clf, legend=legend)
 
+    def tcb_dump_csv(self, freq, gain, op1dB, oip3, oip5):
+        # Create a CSV file name with date and time
+        # Get the current date and time
+        current_time = time.strftime("%Y%m%d_%H%M%S")
+        # Create the CSV file name
+        # Use the current time to create a unique file name
+        csv_file = f"PA_Scan_{current_time}.csv"
+        # Save the data to a CSV file
+        with open(csv_file, "w") as f:
+            f.write("Frequency (MHz), Gain (dB), OP1dB (dBm), OIP3 (dBm), OIP5 (dBm)\n")
+            for i in range(len(freq)):
+                f.write(f"{freq[i]},{gain[i]},{op1dB[i]},{oip3[i]},{oip5[i]}\n")
+        self.log.info(f"Data saved to {csv_file}")
+
+
     def cb_testpa(self):
         if self.sender().isChecked():
             if self.sa is not None:
@@ -261,11 +277,13 @@ class PA_App(QMainWindow):
                 self.thread.progress.connect(self.tcb_progress  )
                 self.thread.data    .connect(self.tcb_plot      )
                 self.thread.log     .connect(self.log.info      )
+                self.thread.csv     .connect(self.tcb_dump_csv  )
                 # Connect to LCD real time display
-                self.thread.lcd_g    .connect(self.h_gui['ScanG'    ].set_val)
-                self.thread.lcd_op1dB.connect(self.h_gui['ScanOP1dB'].set_val)
-                self.thread.lcd_oip3 .connect(self.h_gui['ScanOIP3' ].set_val)
-                self.thread.lcd_oip5 .connect(self.h_gui['ScanOIP5' ].set_val)
+                self.thread.lcd_g    .connect(self.h_gui['ScanG'     ].set_val)
+                self.thread.lcd_op1dB.connect(self.h_gui['ScanOP1dB' ].set_val)
+                self.thread.lcd_oip3 .connect(self.h_gui['ScanOIP3'  ].set_val)
+                self.thread.lcd_oip5 .connect(self.h_gui['ScanOIP5'  ].set_val)
+                self.thread.lcd_p_out .connect(self.h_gui['ScanPout' ].set_val)
 
                 self.thread.start() # Start the thread calling the run method
         else:

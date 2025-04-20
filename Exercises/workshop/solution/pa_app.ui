@@ -155,24 +155,17 @@
         </item>
         <item row="1" column="7">
          <layout class="QGridLayout" name="gridLayout_6">
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_12">
-            <property name="text">
-             <string>OIP5</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_13">
-            <property name="text">
-             <string>dB</string>
-            </property>
-           </widget>
-          </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_11">
             <property name="text">
              <string>OIP3</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>dBm</string>
             </property>
            </widget>
           </item>
@@ -197,17 +190,17 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="2">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>dBm</string>
+          <item row="2" column="1">
+           <widget class="QLCDNumber" name="lcdNumber_3">
+            <property name="digitCount">
+             <number>4</number>
             </property>
            </widget>
           </item>
-          <item row="3" column="2">
-           <widget class="QLabel" name="label_16">
-            <property name="text">
-             <string>dBm</string>
+          <item row="3" column="1">
+           <widget class="QLCDNumber" name="lcdNumber_4">
+            <property name="digitCount">
+             <number>4</number>
             </property>
            </widget>
           </item>
@@ -225,17 +218,45 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QLCDNumber" name="lcdNumber_3">
+          <item row="3" column="2">
+           <widget class="QLabel" name="label_16">
+            <property name="text">
+             <string>dBm</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>OIP5</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>dB</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLCDNumber" name="lcdNumber_5">
             <property name="digitCount">
              <number>4</number>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="QLCDNumber" name="lcdNumber_4">
-            <property name="digitCount">
-             <number>4</number>
+          <item row="4" column="2">
+           <widget class="QLabel" name="label_21">
+            <property name="text">
+             <string>dBm</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_22">
+            <property name="text">
+             <string>Pout</string>
             </property>
            </widget>
           </item>

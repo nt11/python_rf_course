@@ -5,12 +5,14 @@ class PaScan(QThread):
     # Define signals as class attributes (for progressbar and returned data)
     progress    = pyqtSignal(int)
     data        = pyqtSignal(np.ndarray, np.ndarray, bool, str, str) # freq, power, clf , legend, color
+    csv         = pyqtSignal(np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray) # CSV file name
     log         = pyqtSignal(str)
     # LCD signals
     lcd_g      = pyqtSignal(float)
     lcd_op1dB  = pyqtSignal(float)
     lcd_oip3   = pyqtSignal(float)
     lcd_oip5   = pyqtSignal(float)
+    lcd_p_out  = pyqtSignal(float) # Power out
 
     def __init__(self, f_scan,scpi_sa, scpi_sg, loss = 0):
         super().__init__()
@@ -67,6 +69,7 @@ class PaScan(QThread):
             freq  = np.append(freq, f)
             # Update the Gain LCD
             self.lcd_g.emit(gain_i)
+            self.lcd_p_out.emit(peak_value + self.loss)
             # OP1dB
             op1dB_i = self.find_op1db_binary_search(p_tx_nominal - 6, p_tx_nominal + 5, gain[-1])
             op1dB   = np.append(op1dB, op1dB_i)
@@ -126,6 +129,9 @@ class PaScan(QThread):
             if not self.running:
                 break
 
+        # Dump the data to a CSV file
+        self.csv.emit(freq, gain, op1dB, oip3, oip5)
+
     def find_op1db_binary_search(self, p_tx_start, p_tx_end, gain_ref, resolution=0.1):
         low     = p_tx_start
         high    = p_tx_end
@@ -139,6 +145,7 @@ class PaScan(QThread):
             peak_value  = self.sa_sweep_marker_max()
             gain_i      = peak_value + self.loss - mid
             gain_diff   = gain_ref - gain_i
+            self.lcd_p_out.emit(peak_value + self.loss)
 
             # Check if we found the 1dB compression point
             if gain_diff >= 1:
