@@ -113,5 +113,9 @@ class PlotWidget(QWidget):
     def set_y_range(self, y_min, y_max):
         self.plot_widget.setYRange(y_min, y_max)
 
+    def get_y_range(self):
+        return self.plot_widget.getAxis('left').range
+
+
     def set_x_range(self, x_min, x_max):
         self.plot_widget.setXRange(x_min, x_max)

@@ -68,22 +68,26 @@ class PaScan(QThread):
             # Update the Gain LCD
             self.lcd_g.emit(gain_i)
             # OP1dB
-            # Slow scan increase power by 0.1 dB Gheck the gain drop until it is 1 dB
-            for p_tx in np.arange(p_tx_nominal - 3, p_tx_nominal + 5, 0.1):
-                self.scpi_sg.write(f"POW:LEV {p_tx}")
-                peak_value  = self.sa_sweep_marker_max()
-                gain_i      = peak_value  + self.loss - p_tx
-                gain_diff   = gain[-1] - gain_i
-                # Check if the gain has dropped by 1 dB
-                if gain_diff >= 1:
-                    op1dB_i = peak_value  + self.loss
-                    op1dB = np.append(op1dB, op1dB_i )
-                    self.lcd_op1dB.emit(op1dB_i)
-                    break
-            else:
-                op1dB_i = peak_value + self.loss
-                op1dB   = np.append(op1dB, op1dB_i)
-                self.lcd_op1dB.emit(op1dB_i)
+            op1dB_i = self.find_op1db_binary_search(p_tx_nominal - 6, p_tx_nominal + 5, gain[-1])
+            op1dB   = np.append(op1dB, op1dB_i)
+            self.lcd_op1dB.emit(op1dB_i)
+            # # Slow scan increase power by 0.1 dB Gheck the gain drop until it is 1 dB
+            # for p_tx in np.arange(p_tx_nominal - 3, p_tx_nominal + 5, 0.1):
+            #     self.scpi_sg.write(f"POW:LEV {p_tx}")
+            #     peak_value  = self.sa_sweep_marker_max()
+            #     gain_i      = peak_value  + self.loss - p_tx
+            #     gain_diff   = gain[-1] - gain_i
+            #     # Check if the gain has dropped by 1 dB
+            #     if gain_diff >= 1:
+            #         op1dB_i = peak_value  + self.loss
+            #         op1dB = np.append(op1dB, op1dB_i )
+            #         self.lcd_op1dB.emit(op1dB_i)
+            #         break
+            # else:
+            #     op1dB_i = peak_value + self.loss
+            #     op1dB   = np.append(op1dB, op1dB_i)
+            #     self.lcd_op1dB.emit(op1dB_i)
+            #
 
             # OIP3 and OIP5
             # Modulation On and tx power to nominal
@@ -122,6 +126,37 @@ class PaScan(QThread):
             if not self.running:
                 break
 
+    def find_op1db_binary_search(self, p_tx_start, p_tx_end, gain_ref, resolution=0.1):
+        low     = p_tx_start
+        high    = p_tx_end
+        op1dB_i = None
+
+        while high - low > resolution:
+            mid = (low + high) / 2
+
+            # Set the power level and measure gain
+            self.scpi_sg.write(f"POW:LEV {mid}")
+            peak_value  = self.sa_sweep_marker_max()
+            gain_i      = peak_value + self.loss - mid
+            gain_diff   = gain_ref - gain_i
+
+            # Check if we found the 1dB compression point
+            if gain_diff >= 1:
+                # We've exceeded 1dB compression, search lower
+                high    = mid
+                op1dB_i = peak_value + self.loss
+            else:
+                # Not yet at 1dB compression, search higher
+                low = mid
+
+        # Final measurement at the determined power level
+        if op1dB_i is None:
+            # If we didn't find a point with 1dB compression, use the highest power
+            self.scpi_sg.write(f"POW:LEV {high}")
+            peak_value  = self.sa_sweep_marker_max()
+            op1dB_i     = peak_value + self.loss
+
+        return op1dB_i
 
     def sa_sweep_marker_max(self):
         # Initiate a single sweep

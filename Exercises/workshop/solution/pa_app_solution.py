@@ -52,6 +52,7 @@ class PA_App(QMainWindow):
             Fstart              = h_gui(self.lineEdit_3         , self.cb_scan              ),
             Fstop               = h_gui(self.lineEdit_4         , self.cb_scan              ),
             Npoints             = h_gui(self.lineEdit_5         , self.cb_scan              ),
+            FreezeYAxis         = h_gui(self.checkBox           , None              ),
             ScanG               = h_gui(self.lcdNumber          , None              ),
             ScanOP1dB           = h_gui(self.lcdNumber_2        , None              ),
             ScanOIP3            = h_gui(self.lcdNumber_3        , None              ),
@@ -213,8 +214,22 @@ class PA_App(QMainWindow):
         if self.sa is not None:
             # Get the trace from the spectrum analyzer
             trace, freq = self.sa_read_trace()
+            # Check if checkbox of freeze Y axis is checked
+            if self.h_gui['FreezeYAxis'].get_val():
+                # Get the Y axis current limits
+                y_min, y_max = self.plot_sa.get_y_range()
+                # Round to the nearest 10 dB
+                y_min = np.ceil( y_min/10.0)*10.0
+                y_max = np.floor(y_max/10.0)*10.0
+            else:
+                # Set the Y axis limits to the trace
+                y_min = None
+                y_max = None
+
+
             # Plot the trace
             self.plot_sa.plot(freq, trace, line='b-', line_width=3.0,
+                              y_lim_min=y_min       , y_lim_max=y_max,
                               xlabel='Frequency (MHz)', ylabel='Power dBm',
                               title='Spectrum Analyzer', xlog=False, clf=True)
 
