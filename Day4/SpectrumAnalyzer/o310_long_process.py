@@ -19,10 +19,13 @@ class LongProcess(QThread):
         self.vsa.write("*SAV 1")
         # Hi-Res scan of the spectrum analyzer
         fc              = float(self.vsa.query(':sens:FREQ:CENT?').strip())*1e-6  # MHz Center Frequency
-        rbw             = 0.01      # MHz Resolution Bandwidth
-        span            = 5.0      # MHz Span
-        Fstart          = fc -100.0 # MHz Start center Frequency
-        Fstop           = fc +100.0 # MHz Stop center Frequency
+        # Get the current RBW and span settings
+        rbw             = float(self.vsa.query(':sens:BANDwidth:RESolution?').strip())*1e-6  # MHz Resolution Bandwidth
+        # rbw             = 0.01      # MHz Resolution Bandwidth
+        span            = float(self.vsa.query(':sens:FREQuency:SPAN?').strip())*1e-6  # MHz Span
+        # span            = 5.0       # MHz Span
+        Fstart          = fc - span*20.0 # MHz Start center Frequency
+        Fstop           = fc + span*20.0 # MHz Stop center Frequency
         Fscan           = np.arange(Fstart, Fstop, span)
 
         # Calculate the refrence level
