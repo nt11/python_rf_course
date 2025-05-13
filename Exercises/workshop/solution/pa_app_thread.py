@@ -98,15 +98,23 @@ class PaScan(QThread):
             self.scpi_sg.write(f"POW:LEV {p_tx_nominal}")
             peak_value = self.sa_sweep_marker_max()
             p_i        = peak_value + self.loss
+            # Get the frequency of subcarrier 1
+            freq_sig1  = float(self.scpi_sa.query("CALCulate:MARKer:X?"))
             # Next peak twice (OIP3)
             self.scpi_sa.write("CALCulate:MARKer:MAXimum:NEXT")
-            self.scpi_sa.write("CALCulate:MARKer:MAXimum:NEXT")
+            # Get the frequency of subcarrier 2
+            freq_sig2  = float(self.scpi_sa.query("CALCulate:MARKer:X?"))
+            f_sub_h = max(freq_sig1, freq_sig2)
+            f_sub_l = min(freq_sig1, freq_sig2)
+            # Set the marker to OIP3 (sub_h + (sub_h - sub_l))
+            f_oip3 = f_sub_h + (f_sub_h - f_sub_l)
+            self.scpi_sa.write(f"CALCulate:MARKer:X {f_oip3} Hz")
             # Get the peak value
             peak_value = float(self.scpi_sa.query("CALCulate:MARKer:Y?"))
             p_i3        = peak_value + self.loss
             # Next peak twice (OIP5)
-            self.scpi_sa.write("CALCulate:MARKer:MAXimum:NEXT")
-            self.scpi_sa.write("CALCulate:MARKer:MAXimum:NEXT")
+            f_oip5 = f_sub_h + (f_sub_h - f_sub_l)*2
+            self.scpi_sa.write(f"CALCulate:MARKer:X {f_oip5} Hz")
             # Get the peak value
             peak_value = float(self.scpi_sa.query("CALCulate:MARKer:Y?"))
             p_i5        = peak_value + self.loss
@@ -119,7 +127,7 @@ class PaScan(QThread):
             self.lcd_oip5.emit(oip5_i)
 
             # if i%10==0:
-            self.data.emit(freq, gain , True , f"Gain" , 'w')
+            self.data.emit(freq, gain , True , f"Gain" , 'k')
             self.data.emit(freq, op1dB, False, f"OP1dB", 'b')
             self.data.emit(freq, oip3 , False, f"OIP3" , 'g')
             self.data.emit(freq, oip5 , False, f"OIP5" , 'r')
