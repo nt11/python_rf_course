@@ -42,6 +42,8 @@ class LabDemoVsaControl(QMainWindow):
         super().__init__()
         # Load the UI file into the Class (LabDemoVsaControl) object
         loadUi("BasicVsaControl_5.ui", self)
+        # Change the background color of the main window to grey
+        # self.setStyleSheet("background-color: grey;")
         # Create Logger
         self.log = setup_logger(text_browser=self.textBrowser,name='sa_log', level=logging.INFO,is_console=True)
         logging.getLogger('sa_log').propagate = True
@@ -86,6 +88,8 @@ class LabDemoVsaControl(QMainWindow):
         self.plot_sa        = PlotWidget()
         layout              = QVBoxLayout(self.widget)
         layout.addWidget(self.plot_sa)
+        # Set the background color of the plot widget to white
+        self.plot_sa.set_background_color('white')
 
         # Create a timer for the Spectrum Analyzer plot
         self.timer          = QTimer()
@@ -138,7 +142,7 @@ class LabDemoVsaControl(QMainWindow):
             try:
                 ip              = self.h_gui['IP'].get_val()
                 self.vsa        = self.rm.open_resource(f"TCPIP0::{ip}::inst0::INSTR")
-                self.vsa.timeout = 5000
+                self.vsa.timeout = 60000
                 self.log.info(f"Connected to {ip}")
                 # Read the signal generator status and update the GUI (RF On/Off, Modulation On/Off,Pout and Fc)
                 # Query the signal generator name
@@ -301,13 +305,13 @@ class LabDemoVsaControl(QMainWindow):
         if self.vsa is not None:
             y,x = self.vsa_read_trace()
             self.plot_sa.plot( x , y ,
-                               line='y-' , line_width=1.5,
+                               line='b-' , line_width=4.0,
                                xlabel='Frequency (MHz)', ylabel='Power dBm',
                                title='PSA', xlog=False, clf=True)
 
     def cb_hi_res_plot(self, freq, power):
             self.plot_sa.plot( freq , power ,
-                               line='b-' , line_width=1.5,
+                               line='b-' , line_width=4.0,
                                xlabel='Frequency (MHz)', ylabel='Power dBm',
                                title='Hi-Res PSA', xlog=False, clf=True)
 

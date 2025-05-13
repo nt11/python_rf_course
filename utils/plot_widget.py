@@ -119,3 +119,6 @@ class PlotWidget(QWidget):
 
     def set_x_range(self, x_min, x_max):
         self.plot_widget.setXRange(x_min, x_max)
+
+    def set_background_color(self, color):
+        self.plot_widget.setBackground(color)

@@ -34,6 +34,8 @@ class PA_App(QMainWindow):
         super().__init__()
         # Load the UI file into the Class (LabDemoVsaControl) object
         loadUi("pa_app.ui", self)
+        # Change the background color of the main window to grey
+        # self.setStyleSheet("background-color: grey;")
         # Create Logger
         self.log = setup_logger(text_browser=self.textBrowser,name='pa_log', level=logging.INFO,is_console=True)
         logging.getLogger('pa_log').propagate = True
@@ -85,6 +87,8 @@ class PA_App(QMainWindow):
         self.plot_sa        = PlotWidget()
         layout              = QVBoxLayout(self.widget)
         layout.addWidget(self.plot_sa)
+        # Change the background color of the plot to white
+        self.plot_sa.set_background_color('w')
 
         # Iinitilize the freq and power arrays to empty
         self.f_scan = np.array([])
@@ -243,7 +247,7 @@ class PA_App(QMainWindow):
         freq_v  = self.f_scan
         power_v = np.concatenate((power, np.ones(len(freq_v)-len(power))*power[0]))
         self.plot_sa.plot( freq_v , power_v,
-                           line=color , line_width=3.0,
+                           line=color , line_width=6.0,
                            xlabel='Frequency (MHz)', ylabel='Power dBm',
                            title='Filter response', xlog=False, clf=clf, legend=legend)
 

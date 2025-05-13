@@ -27,6 +27,8 @@ class LabDemoMxgControl(QMainWindow):
         super().__init__()
         # Load the UI file into the Class (LabDemoMxgControl) object
         loadUi("MxgControlMultiTone.ui", self)
+        # Change the background color of the main window to grey
+        # self.setStyleSheet("background-color: grey;")
 
         self.setWindowTitle("MXG Control")
 
