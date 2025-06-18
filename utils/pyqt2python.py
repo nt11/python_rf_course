@@ -1,5 +1,6 @@
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QComboBox, QCheckBox, QSlider, QPushButton, QSpinBox, QLineEdit, QDoubleSpinBox, QDial, QProgressBar, QLCDNumber
+from PyQt6.QtWidgets import QComboBox, QCheckBox, QSlider, QPushButton, QSpinBox, QLineEdit, QDoubleSpinBox, QDial, \
+    QProgressBar, QLCDNumber, QRadioButton
 
 
 class h_gui:
@@ -14,6 +15,8 @@ class h_gui:
                     self.event = "currentIndexChanged"
                 elif isinstance(obj, QCheckBox):
                     self.event = "stateChanged"
+                elif isinstance(obj,QRadioButton):
+                    self.event = "toggled"
                 elif isinstance(obj, (QSlider, QSpinBox, QDoubleSpinBox,QDial)):
                     self.event = "valueChanged"
                 elif isinstance(obj, QPushButton):
@@ -50,6 +53,9 @@ class h_gui:
             self.obj.setCurrentIndex(value)
         elif isinstance(self.obj, QCheckBox):
             self.obj.setChecked(value)
+        elif isinstance(self.obj, QRadioButton):
+            self.obj.setChecked(value)
+            callback_is_called = False
         elif isinstance(self.obj, QSlider):
             self.obj.setValue(value)
         elif isinstance(self.obj, QDial):
@@ -100,7 +106,7 @@ class h_gui:
     def get_val(self):
         if isinstance(self.obj, QComboBox):
             return self.obj.currentIndex()
-        elif isinstance(self.obj, QCheckBox):
+        elif isinstance(self.obj, (QCheckBox,QRadioButton)):
             return self.obj.isChecked()
         elif isinstance(self.obj, (QSlider, QSpinBox, QDoubleSpinBox,QDial, QProgressBar)):
             return self.obj.value()

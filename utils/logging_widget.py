@@ -14,12 +14,13 @@ class LoggingWidget(logging.Handler):
         self.text_browser.append(msg)
 
 # Dual logger setup (console and QTextBrowser)
-def setup_logger(text_browser=None, name='pyqt_app' , level=logging.DEBUG, is_console=True) -> None:
+def setup_logger(text_browser=None, name='pyqt_app' , level=logging.DEBUG, file_name=None, is_console=True) -> None:
     """
     Setup a logger with a QTextBrowser handler
     :param text_browser: PyQt QTextBrowser widget
     :param name: Logger name, used to identify the logger
     :param level: Logger level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    :param file_name: Log file name
     :param is_console: Dump log messages to console if True
     :return: None
     """
@@ -29,6 +30,12 @@ def setup_logger(text_browser=None, name='pyqt_app' , level=logging.DEBUG, is_co
 
     # Clear existing handlers to prevent duplicates
     logger.handlers.clear()
+
+    if file_name is not None:
+        file_handler = logging.FileHandler(file_name)
+        file_handler.setLevel(level)
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        logger.addHandler(file_handler)
 
     # Console Handler (keeps console output)
     if is_console:
