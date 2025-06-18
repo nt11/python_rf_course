@@ -5,7 +5,6 @@ class MyError(Exception):
     pass
 
 if __name__=="__main__":
-
     try:
         # some code
         raise ValueError("Original Error")
